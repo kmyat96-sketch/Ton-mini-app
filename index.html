@@ -1,121 +1,81 @@
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+    res.send(`
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Shop Mini App</title>
-    <!-- Telegram Web App SDK -->
+    <title>Buy TON Crystal</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f172a;
+            color: #ffffff;
             margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 90vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
         .card {
-            background-color: var(--tg-theme-secondary-bg-color, #f4f4f5);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        h2 {
-            margin-top: 0;
-            color: var(--tg-theme-link-color, #0088cc);
-        }
-        .option-btn {
+            background-color: #1e293b;
+            border-radius: 16px;
+            padding: 24px;
             width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid var(--tg-theme-link-color, #0088cc);
-            background-color: transparent;
-            color: var(--tg-theme-text-color, #000000);
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            max-width: 350px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center;
         }
-        .option-btn.selected {
-            background-color: var(--tg-theme-button-color, #0088cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #38bdf8;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 20px;
         }
         .buy-btn {
-            width: 100%;
-            padding: 14px;
-            margin-top: 15px;
+            background-color: #0088cc;
+            color: white;
             border: none;
-            border-radius: 8px;
-            background-color: var(--tg-theme-button-color, #0088cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            font-size: 18px;
+            padding: 14px 20px;
+            font-size: 16px;
             font-weight: bold;
+            border-radius: 12px;
             cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        .buy-btn:hover {
+            background-color: #006699;
         }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h2>💎 Buy TON Crystal</h2>
-    <p>ဝယ်ယူလိုသော TON ပမာဏကို ရွေးချယ်ပါ</p>
-
     <div class="card">
-        <button class="option-btn" onclick="selectAmount(5, this)">5 TON</button>
-        <button class="option-btn" onclick="selectAmount(10, this)">10 TON</button>
-        <button class="option-btn" onclick="selectAmount(20, this)">20 TON</button>
+        <div class="title">💎 Buy TON Crystal</div>
+        <div class="subtitle">Welcome to your Telegram Mini App</div>
+        <button class="buy-btn" onclick="alert('Proceeding to buy TON!')">Buy Now</button>
     </div>
-
-    <button class="buy-btn" onclick="confirmPurchase()">ဝယ်ယူမည်</button>
-</div>
-
-<script>
-    // Telegram Web App SDK initialization
-    const tg = window.Telegram.WebApp;
-    tg.expand(); // App အား Screen အပြည့်ပွင့်စေရန်
-
-    let selectedAmount = 0;
-
-    function selectAmount(amount, element) {
-        selectedAmount = amount;
-        
-        // Active highlight ပြုလုပ်ရန်
-        const buttons = document.querySelectorAll('.option-btn');
-        buttons.forEach(btn => btn.classList.remove('selected'));
-        element.classList.add('selected');
-    }
-
-    function confirmPurchase() {
-        if (selectedAmount === 0) {
-            tg.showAlert("ကျေးဇူးပြု၍ TON ပမာဏ ပထမဦးစွာ ရွေးချယ်ပေးပါခင်ဗျာ။");
-            return;
-        }
-
-        tg.showConfirm(`${selectedAmount} TON ဝယ်ယူရန် သေချာပါသလား?`, (confirmed) => {
-            if (confirmed) {
-                // Telegram Bot သို့ Data ပြန်ပို့ခြင်း
-                tg.sendData(JSON.stringify({
-                    action: "buy_ton",
-                    amount: selectedAmount,
-                    user_id: tg.initDataUnsafe?.user?.id || "Unknown"
-                }));
-                tg.close();
-            }
-        });
-    }
-</script>
-
+    <script>
+        window.Telegram.WebApp.ready();
+    </script>
 </body>
 </html>
+    `);
+});
+
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
