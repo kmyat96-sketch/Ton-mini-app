@@ -42,7 +42,7 @@
         
         .input-group { margin-bottom: 12px; text-align: left; }
         label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px; }
-        input {
+        input[type="number"], input[type="text"], input[type="file"] {
             width: 100%;
             padding: 10px 12px;
             border-radius: 8px;
@@ -51,6 +51,11 @@
             color: #fff;
             box-sizing: border-box;
             font-size: 14px;
+        }
+        input[type="file"] {
+            padding: 8px;
+            font-size: 12px;
+            color: #94a3b8;
         }
         .buy-btn {
             background-color: #0088cc;
@@ -68,6 +73,15 @@
             background-color: #334155;
             color: #94a3b8;
         }
+        #preview-img {
+            width: 100%;
+            max-height: 150px;
+            object-fit: contain;
+            margin-top: 8px;
+            border-radius: 6px;
+            display: none;
+            border: 1px solid #334155;
+        }
     </style>
 </head>
 <body>
@@ -76,108 +90,3 @@
         <div class="title">💎 Buy TON Crystal</div>
         <div class="subtitle">KBZPay / Wave Pay ဖြင့် ဝယ်ယူရန်</div>
 
-        <!-- ငွေလွှဲရမည့် အကောင့်များ -->
-        <div class="pay-info">
-            <div class="pay-title">📌 ငွေလွှဲရမည့် အကောင့်များ</div>
-            <div class="pay-row"><span>KBZPay:</span> <strong>09897775612</strong></div>
-            <div class="pay-row"><span>Wave Pay:</span> <strong>09784000463</strong></div>
-        </div>
-
-        <!-- ဝယ်ယူသူ ဖြည့်စွက်ရမည့် Form -->
-        <div class="input-group">
-            <label>ဝယ်ယူလိုသော TON ပမာဏ:</label>
-            <input type="number" id="ton-amount" placeholder="ဥပမာ - 5" step="0.1">
-        </div>
-
-        <div class="input-group">
-            <label>သင်၏ TON Wallet Address (ငွေလက်ခံမည့်လိပ်စာ):</label>
-            <input type="text" id="ton-address" placeholder="UQ... သို့မဟုတ် EQ...">
-        </div>
-
-        <div class="input-group">
-            <label>KBZPay / Wave Pay Transaction ID (နောက်ဆုံး ၆ လုံး):</label>
-            <input type="text" id="tran-id" placeholder="ဥပမာ - 123456">
-        </div>
-
-        <button type="button" class="buy-btn" id="submit-btn" onclick="submitOrder()">အော်ဒါ တင်မည်</button>
-    </div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-
-        const BOT_TOKEN = "8727961800:AAH0MwVr819OM8d0JtC8cbMTYPvM6yWLqhI"; 
-        const ADMIN_CHAT_ID = "1551804446"; 
-
-        function submitOrder() {
-            const amount = document.getElementById('ton-amount').value;
-            const address = document.getElementById('ton-address').value.trim();
-            const tranId = document.getElementById('tran-id').value.trim();
-            const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
-
-            if(!amount || !address || !tranId) {
-                alert('ကျေးဇူးပြု၍ အချက်အလက်များ အကုန်လုံး ဖြည့်စွက်ပေးပါခင်ဗျာ။');
-                return;
-            }
-
-            const btn = document.getElementById('submit-btn');
-            btn.innerText = "ခဏစောင့်ပါ...";
-            btn.disabled = true;
-
-            const username = (user && user.username) ? "@" + user.username : "Username မရှိပါ";
-            const firstName = (user && user.first_name) ? user.first_name : "Customer";
-            
-            // TON Nano Amount Calculation (1 TON = 1,000,000,000 nanoTON)
-            const nanoAmount = Math.round(parseFloat(amount) * 1000000000);
-            
-            // Tonkeeper One-Click Deep Link
-            const tonkeeperUrl = "https://app.tonkeeper.com/transfer/" + address + "?amount=" + nanoAmount;
-
-            const message = "🛒 *အော်ဒါအသစ် ရောက်ရှိပါသည်။*\n\n" +
-                            "👤 ဝယ်ယူသူ: " + firstName + " (" + username + ")\n" +
-                            "💎 ပမာဏ: " + amount + " TON\n" +
-                            "👛 Wallet Address:\n`" + address + "`\n\n" +
-                            "🧾 Tran ID: `" + tranId + "`";
-
-            const xhr = new XMLHttpRequest();
-            const url = "https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage";
-            
-            xhr.open("POST", url, true);
-            xhr.setRequestHeader("Content-Type", "application/json");
-
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        alert("အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ ငွေစစ်ဆေးပြီးပါက TON လွှဲပေးပါမည်။");
-                        try { tg.close(); } catch(e){}
-                    } else {
-                        alert("အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်။ (Error Code: " + xhr.status + ")");
-                        btn.innerText = "အော်ဒါ တင်မည်";
-                        btn.disabled = false;
-                    }
-                }
-            };
-
-            // Inline Button ဖြင့် Tonkeeper ဆီ တိုက်ရိုက်သွားမည့် ခလုတ် ထည့်သွင်းခြင်း
-            const data = JSON.stringify({
-                chat_id: ADMIN_CHAT_ID,
-                text: message,
-                parse_mode: 'Markdown',
-                reply_markup: {
-                    inline_keyboard: [
-                        [
-                            {
-                                text: "📲 Send TON via Tonkeeper",
-                                url: tonkeeperUrl
-                            }
-                        ]
-                    ]
-                }
-            });
-
-            xhr.send(data);
-        }
-    </script>
-</body>
-</html>
