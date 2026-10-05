@@ -11,7 +11,7 @@
             background-color: #0f172a;
             color: #ffffff;
             margin: 0;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -21,37 +21,54 @@
         .card {
             background-color: #1e293b;
             border-radius: 16px;
-            padding: 24px;
+            padding: 20px;
             width: 100%;
-            max-width: 350px;
+            max-width: 360px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            text-align: center;
         }
-        .title { font-size: 22px; font-weight: bold; margin-bottom: 8px; color: #38bdf8; }
-        .subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 20px; }
-        .input-group { margin-bottom: 16px; text-align: left; }
-        label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 6px; }
+        .title { font-size: 20px; font-weight: bold; text-align: center; color: #38bdf8; margin-bottom: 4px; }
+        .subtitle { font-size: 13px; text-align: center; color: #94a3b8; margin-bottom: 16px; }
+        
+        .pay-info {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+        .pay-title { font-weight: bold; color: #fbbf24; margin-bottom: 8px; }
+        .pay-row { display: flex; justify-content: space-between; margin-bottom: 6px; color: #cbd5e1; }
+        
+        .input-group { margin-bottom: 12px; text-align: left; }
+        label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px; }
         input {
             width: 100%;
-            padding: 12px;
+            padding: 10px 12px;
             border-radius: 8px;
             border: 1px solid #334155;
             background-color: #0f172a;
             color: #fff;
             box-sizing: border-box;
-            font-size: 16px;
+            font-size: 14px;
         }
         .buy-btn {
             background-color: #0088cc;
             color: white;
             border: none;
-            padding: 14px;
-            font-size: 16px;
+            padding: 12px;
+            font-size: 15px;
             font-weight: bold;
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             width: 100%;
-            margin-top: 10px;
+            margin-top: 8px;
+        }
+        .address-box {
+            word-break: break-all;
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 4px;
         }
     </style>
 </head>
@@ -59,14 +76,32 @@
 
     <div class="card">
         <div class="title">💎 Buy TON Crystal</div>
-        <div class="subtitle">Enter amount and process payment</div>
-        
-        <div class="input-group">
-            <label>Amount (TON):</label>
-            <input type="number" id="ton-amount" placeholder="e.g. 10" value="5">
+        <div class="subtitle">KBZPay / Wave Pay ဖြင့် ဝယ်ယူရန်</div>
+
+        <!-- ငွေလွှဲရမည့် အချက်အလက်များ -->
+        <div class="pay-info">
+            <div class="pay-title">📌 ငွေလွှဲရမည့် အကောင့်များ</div>
+            <div class="pay-row"><span>KBZPay:</span> <strong>09897775612</strong></div>
+            <div class="pay-row"><span>Wave Pay:</span> <strong>09784000463</strong></div>
         </div>
 
-        <button class="buy-btn" onclick="sendPaymentOrder()">Pay via Telegram</button>
+        <!-- အော်ဒါတင်ရန် Form -->
+        <div class="input-group">
+            <label>ဝယ်ယူလိုသော TON ပမာဏ:</label>
+            <input type="number" id="ton-amount" placeholder="ဥပမာ - 5" step="0.1">
+        </div>
+
+        <div class="input-group">
+            <label>သင်၏ TON Wallet Address (ငွေလက်ခံမည့်လိပ်စာ):</label>
+            <input type="text" id="ton-address" placeholder="UQ... သို့မဟုတ် EQ...">
+        </div>
+
+        <div class="input-group">
+            <label>KBZPay / Wave Pay Transaction ID (နောက်ဆုံး ၆ လုံး):</label>
+            <input type="text" id="tran-id" placeholder="ဥပမာ - 123456">
+        </div>
+
+        <button class="buy-btn" onclick="submitOrder()">အော်ဒါ တင်မည်</button>
     </div>
 
     <script>
@@ -74,20 +109,32 @@
         tg.ready();
         tg.expand();
 
-        function sendPaymentOrder() {
+        // Admin ၏ Tonkeeper Wallet Address
+        const adminWallet = "UQBhMqp1xB7U8__dY3rdMoKx3JUpP_5jOhi5a_eAHvQfOGH_";
+
+        function submitOrder() {
             const amount = document.getElementById('ton-amount').value;
-            if(!amount || amount <= 0) {
-                alert('Please enter a valid amount');
+            const address = document.getElementById('ton-address').value;
+            const tranId = document.getElementById('tran-id').value;
+
+            if(!amount || !address || !tranId) {
+                alert('ကျေးဇူးပြု၍ အချက်အလက်များ အကုန်လုံး ဖြည့်စွက်ပေးပါခင်ဗျာ။');
                 return;
             }
 
-            // WebApp မှတစ်ဆင့် Telegram Bot ထံ သို့ အချက်အလက်လှမ်းပို့ပေးခြင်း
-            const data = {
-                action: "buy_ton",
-                amount: amount
+            const orderData = {
+                action: "buy_ton_order",
+                amount: amount,
+                user_wallet: address,
+                transaction_id: tranId,
+                seller_wallet: adminWallet
             };
+
+            alert("အော်ဒါ အချက်အလက်များ လက်ခံရရှိပါပြီ။ ငွေဝင်ရောက်မှုကို စစ်ဆေးပြီးပါက TON လွှဲပေးပါမည်။");
             
-            tg.sendData(JSON.stringify(data)); // ဒီနေရာမှာ Mini App ပိတ်ပြီး Bot ဆီ Data ရောက်သွားပါမည်
+            if (tg.sendData) {
+                tg.sendData(JSON.stringify(orderData));
+            }
         }
     </script>
 </body>
