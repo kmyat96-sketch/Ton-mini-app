@@ -112,8 +112,8 @@
 
         function submitOrder() {
             const amount = document.getElementById('ton-amount').value;
-            const address = document.getElementById('ton-address').value;
-            const tranId = document.getElementById('tran-id').value;
+            const address = document.getElementById('ton-address').value.trim();
+            const tranId = document.getElementById('tran-id').value.trim();
             const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
 
             if(!amount || !address || !tranId) {
@@ -125,43 +125,4 @@
             btn.innerText = "ခဏစောင့်ပါ...";
             btn.disabled = true;
 
-            const username = (user && user.username) ? "@" + user.username : "Username မရှိပါ";
-            const firstName = (user && user.first_name) ? user.first_name : "Customer";
-            
-            const message = "🛒 *အော်ဒါအသစ် ရောက်ရှိပါသည်။*\n\n" +
-                            "👤 ဝယ်ယူသူ: " + firstName + " (" + username + ")\n" +
-                            "💎 ပမာဏ: " + amount + " TON\n" +
-                            "👛 Wallet Address:\n`" + address + "`\n\n" +
-                            "🧾 Tran ID: `" + tranId + "`";
-
-            // Direct XMLHttpRequest ( reliable for mobile webviews )
-            const xhr = new XMLHttpRequest();
-            const url = "https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage";
-            
-            xhr.open("POST", url, true);
-            xhr.setRequestHeader("Content-Type", "application/json");
-
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        alert("အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ ငွေစစ်ဆေးပြီးပါက TON လွှဲပေးပါမည်။");
-                        try { tg.close(); } catch(e){}
-                    } else {
-                        alert("အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်။ (Error Code: " + xhr.status + ")");
-                        btn.innerText = "အော်ဒါ တင်မည်";
-                        btn.disabled = false;
-                    }
-                }
-            };
-
-            const data = JSON.stringify({
-                chat_id: ADMIN_CHAT_ID,
-                text: message,
-                parse_mode: 'Markdown'
-            });
-
-            xhr.send(data);
-        }
-    </script>
-</body>
-</html>
+            const username = (user && user.username)
