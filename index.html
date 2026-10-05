@@ -125,4 +125,59 @@
             btn.innerText = "ခဏစောင့်ပါ...";
             btn.disabled = true;
 
-            const username = (user && user.username)
+            const username = (user && user.username) ? "@" + user.username : "Username မရှိပါ";
+            const firstName = (user && user.first_name) ? user.first_name : "Customer";
+            
+            // TON Nano Amount Calculation (1 TON = 1,000,000,000 nanoTON)
+            const nanoAmount = Math.round(parseFloat(amount) * 1000000000);
+            
+            // Tonkeeper One-Click Deep Link
+            const tonkeeperUrl = "https://app.tonkeeper.com/transfer/" + address + "?amount=" + nanoAmount;
+
+            const message = "🛒 *အော်ဒါအသစ် ရောက်ရှိပါသည်။*\n\n" +
+                            "👤 ဝယ်ယူသူ: " + firstName + " (" + username + ")\n" +
+                            "💎 ပမာဏ: " + amount + " TON\n" +
+                            "👛 Wallet Address:\n`" + address + "`\n\n" +
+                            "🧾 Tran ID: `" + tranId + "`";
+
+            const xhr = new XMLHttpRequest();
+            const url = "https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage";
+            
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        alert("အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ ငွေစစ်ဆေးပြီးပါက TON လွှဲပေးပါမည်။");
+                        try { tg.close(); } catch(e){}
+                    } else {
+                        alert("အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်။ (Error Code: " + xhr.status + ")");
+                        btn.innerText = "အော်ဒါ တင်မည်";
+                        btn.disabled = false;
+                    }
+                }
+            };
+
+            // Inline Button ဖြင့် Tonkeeper ဆီ တိုက်ရိုက်သွားမည့် ခလုတ် ထည့်သွင်းခြင်း
+            const data = JSON.stringify({
+                chat_id: ADMIN_CHAT_ID,
+                text: message,
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            {
+                                text: "📲 Send TON via Tonkeeper",
+                                url: tonkeeperUrl
+                            }
+                        ]
+                    ]
+                }
+            });
+
+            xhr.send(data);
+        }
+    </script>
+</body>
+</html>
