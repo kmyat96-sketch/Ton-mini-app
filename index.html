@@ -7,15 +7,14 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #0f172a;
             color: #ffffff;
             margin: 0;
             padding: 20px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             min-height: 100vh;
             box-sizing: border-box;
         }
@@ -28,42 +27,68 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             text-align: center;
         }
-        .title {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #38bdf8;
-        }
-        .subtitle {
-            font-size: 14px;
-            color: #94a3b8;
-            margin-bottom: 20px;
+        .title { font-size: 22px; font-weight: bold; margin-bottom: 8px; color: #38bdf8; }
+        .subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 20px; }
+        .input-group { margin-bottom: 16px; text-align: left; }
+        label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 6px; }
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background-color: #0f172a;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 16px;
         }
         .buy-btn {
             background-color: #0088cc;
             color: white;
             border: none;
-            padding: 14px 20px;
+            padding: 14px;
             font-size: 16px;
             font-weight: bold;
             border-radius: 12px;
             cursor: pointer;
             width: 100%;
-            transition: background 0.3s;
-        }
-        .buy-btn:hover {
-            background-color: #006699;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
+
     <div class="card">
         <div class="title">💎 Buy TON Crystal</div>
-        <div class="subtitle">Welcome to your Telegram Mini App</div>
-        <button class="buy-btn" onclick="alert('Proceeding to buy TON!')">Buy Now</button>
+        <div class="subtitle">Enter amount and process payment</div>
+        
+        <div class="input-group">
+            <label>Amount (TON):</label>
+            <input type="number" id="ton-amount" placeholder="e.g. 10" value="5">
+        </div>
+
+        <button class="buy-btn" onclick="sendPaymentOrder()">Pay via Telegram</button>
     </div>
+
     <script>
-        window.Telegram.WebApp.ready();
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        function sendPaymentOrder() {
+            const amount = document.getElementById('ton-amount').value;
+            if(!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            // WebApp မှတစ်ဆင့် Telegram Bot ထံ သို့ အချက်အလက်လှမ်းပို့ပေးခြင်း
+            const data = {
+                action: "buy_ton",
+                amount: amount
+            };
+            
+            tg.sendData(JSON.stringify(data)); // ဒီနေရာမှာ Mini App ပိတ်ပြီး Bot ဆီ Data ရောက်သွားပါမည်
+        }
     </script>
 </body>
 </html>
