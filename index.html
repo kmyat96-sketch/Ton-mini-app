@@ -64,78 +64,9 @@
             width: 100%;
             margin-top: 8px;
         }
-        .address-box {
-            word-break: break-all;
-            font-size: 11px;
-            color: #64748b;
-            margin-top: 4px;
-        }
     </style>
 </head>
 <body>
 
     <div class="card">
         <div class="title">💎 Buy TON Crystal</div>
-        <div class="subtitle">KBZPay / Wave Pay ဖြင့် ဝယ်ယူရန်</div>
-
-        <!-- ငွေလွှဲရမည့် အချက်အလက်များ -->
-        <div class="pay-info">
-            <div class="pay-title">📌 ငွေလွှဲရမည့် အကောင့်များ</div>
-            <div class="pay-row"><span>KBZPay:</span> <strong>09897775612</strong></div>
-            <div class="pay-row"><span>Wave Pay:</span> <strong>09784000463</strong></div>
-        </div>
-
-        <!-- အော်ဒါတင်ရန် Form -->
-        <div class="input-group">
-            <label>ဝယ်ယူလိုသော TON ပမာဏ:</label>
-            <input type="number" id="ton-amount" placeholder="ဥပမာ - 5" step="0.1">
-        </div>
-
-        <div class="input-group">
-            <label>သင်၏ TON Wallet Address (ငွေလက်ခံမည့်လိပ်စာ):</label>
-            <input type="text" id="ton-address" placeholder="UQ... သို့မဟုတ် EQ...">
-        </div>
-
-        <div class="input-group">
-            <label>KBZPay / Wave Pay Transaction ID (နောက်ဆုံး ၆ လုံး):</label>
-            <input type="text" id="tran-id" placeholder="ဥပမာ - 123456">
-        </div>
-
-        <button class="buy-btn" onclick="submitOrder()">အော်ဒါ တင်မည်</button>
-    </div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-
-        // Admin ၏ Tonkeeper Wallet Address
-        const adminWallet = "UQBhMqp1xB7U8__dY3rdMoKx3JUpP_5jOhi5a_eAHvQfOGH_";
-
-        function submitOrder() {
-            const amount = document.getElementById('ton-amount').value;
-            const address = document.getElementById('ton-address').value;
-            const tranId = document.getElementById('tran-id').value;
-
-            if(!amount || !address || !tranId) {
-                alert('ကျေးဇူးပြု၍ အချက်အလက်များ အကုန်လုံး ဖြည့်စွက်ပေးပါခင်ဗျာ။');
-                return;
-            }
-
-            const orderData = {
-                action: "buy_ton_order",
-                amount: amount,
-                user_wallet: address,
-                transaction_id: tranId,
-                seller_wallet: adminWallet
-            };
-
-            alert("အော်ဒါ အချက်အလက်များ လက်ခံရရှိပါပြီ။ ငွေဝင်ရောက်မှုကို စစ်ဆေးပြီးပါက TON လွှဲပေးပါမည်။");
-            
-            if (tg.sendData) {
-                tg.sendData(JSON.stringify(orderData));
-            }
-        }
-    </script>
-</body>
-</html>
