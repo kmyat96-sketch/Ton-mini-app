@@ -10,7 +10,7 @@
         body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 15px; color: #333; }
         .container { max-width: 400px; margin: auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #0088cc; }
-        .tab { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .tab { display: flex; justify-space-between; margin-bottom: 20px; }
         .tab button { flex: 1; padding: 10px; border: none; background: #ddd; cursor: pointer; font-weight: bold; }
         .tab button.active { background: #0088cc; color: white; }
         .form-group { margin-bottom: 15px; }
@@ -53,14 +53,15 @@
 
         <div style="font-size: 13px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
             📌 <b>ငွေလွှဲရန် အကောင့်များ:</b><br>
+            • အမည်: <b>Kaung Ko Ko Thant</b><br>
             • KBZ Pay: <b>09751288906</b><br>
             • Wave Money: <b>09751288906</b><br>
-            (ငွေလွှဲပြီးပါက ပြေစာပုံနှင့် Tran ID တင်ပေးပါ။)
+            (ငွေလွှဲပြီးပါက ပြေစာပုံနှင့် Tran ID ဂဏန်း ၆ လုံး တင်ပေးပါ။)
         </div>
 
         <div class="form-group">
             <label>ငွေလွှဲ Tran ID (သို့) ဖုန်းနံပါတ်နောက်ဆုံး ၆ လုံး</label>
-            <input type="text" id="tranId" placeholder="ဥပမာ - 123456">
+            <input type="text" id="tranId" placeholder="ဂဏန်း အတိအကျ ၆ လုံး ဖြည့်ပါ" maxlength="10">
         </div>
         
         <div class="form-group">
@@ -144,12 +145,19 @@
 
     async function submitOrder() {
         let amount = document.getElementById('tonAmount').value;
-        let tranId = document.getElementById('tranId').value;
-        let wallet = document.getElementById('manualWallet').value;
+        let tranId = document.getElementById('tranId').value.trim();
+        let wallet = document.getElementById('manualWallet').value.trim();
         let imageFile = document.getElementById('receiptImage').files[0];
 
+        // Validation Checks
         if (!tranId || !wallet || !imageFile) {
-            alert('အချက်အလက်များနှင့် ငွေလွှဲပြေစာ ပုံကို အပြည့်အစုံ ဖြည့်စွက်ပါ။');
+            alert('ကျေးဇူးပြု၍ အချက်အလက်များနှင့် ငွေလွှဲပြေစာ ပုံကို အပြည့်အစုံ ဖြည့်စွက်ပါ။');
+            return;
+        }
+
+        // Check if Tran ID / Phone digits are at least 6 characters long
+        if (tranId.length < 6) {
+            alert('ကျေးဇူးပြု၍ ငွေလွှဲ Tran ID (သို့) ဖုန်းနံပါတ်နောက်ဆုံး ၆ လုံးကို အပြည့်အစုံ ထည့်သွင်းပေးပါ။');
             return;
         }
 
