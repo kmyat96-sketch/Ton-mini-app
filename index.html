@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buy TON Crystal</title>
+    <title>Buy Telegram Stars</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
@@ -34,12 +34,12 @@
         }
         .tab-btn {
             flex: 1;
-            padding: 10px;
+            padding: 10px 4px;
             background: none;
             border: none;
             color: #94a3b8;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             border-bottom: 2px solid transparent;
         }
@@ -53,18 +53,6 @@
         .title { font-size: 20px; font-weight: bold; text-align: center; color: #38bdf8; margin-bottom: 4px; }
         .subtitle { font-size: 13px; text-align: center; color: #94a3b8; margin-bottom: 12px; }
 
-        /* Today Rate Banner */
-        .rate-box {
-            background: linear-gradient(135deg, #0284c7, #0369a1);
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-            margin-bottom: 14px;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
-        }
-        .rate-title { font-size: 11px; color: #bae6fd; text-transform: uppercase; letter-spacing: 0.5px; }
-        .rate-value { font-size: 18px; font-weight: bold; color: #ffffff; margin-top: 2px; }
-        
         .pay-info {
             background-color: #0f172a;
             border: 1px solid #334155;
@@ -94,12 +82,6 @@
             font-size: 12px;
             color: #94a3b8;
         }
-        .total-calc {
-            font-size: 12px;
-            color: #fbbf24;
-            margin-top: 4px;
-            font-weight: bold;
-        }
         .buy-btn {
             background-color: #0088cc;
             color: white;
@@ -117,7 +99,7 @@
             color: #94a3b8;
         }
 
-        #preview-img {
+        .preview-img {
             width: 100%;
             max-height: 250px;
             object-fit: contain;
@@ -170,52 +152,47 @@
 
     <div class="card">
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('buy-tab')">💎 TON ဝယ်ယူရန်</button>
-            <button class="tab-btn" onclick="switchTab('history-tab')">📋 အော်ဒါ မှတ်တမ်း</button>
+            <button class="tab-btn active" onclick="switchTab('star-tab')">⭐ Buy Stars</button>
+            <button class="tab-btn" onclick="switchTab('history-tab')">📋 မှတ်တမ်း</button>
         </div>
 
-        <div id="buy-tab" class="tab-content active">
-            <div class="title">Buy TON Crystal</div>
+        <!-- Telegram Stars Tab -->
+        <div id="star-tab" class="tab-content active">
+            <div class="title">Buy Telegram Stars</div>
             <div class="subtitle">KBZPay / Wave Pay ဖြင့် ဝယ်ယူရန်</div>
-
-            <!-- ယနေ့ TON ဈေးနှုန်းပြသသည့်နေရာ -->
-            <div class="rate-box">
-                <div class="rate-title">📊 ယနေ့ TON ဈေးနှုန်း (1 TON)</div>
-                <div class="rate-value" id="display-rate">ရယူနေသည်...</div>
-            </div>
 
             <div class="pay-info">
                 <div class="pay-title">📌 ငွေလွှဲရမည့် အကောင့်များ</div>
                 <div class="acc-name">( Account Name: Kaung Ko Ko Thant )</div>
-                <div class="pay-row"><span>KBZPay:</span> <strong id="display-kpay">...</strong></div>
-                <div class="pay-row"><span>Wave Pay:</span> <strong id="display-wave">...</strong></div>
+                <div class="pay-row"><span>KBZPay:</span> <strong class="display-kpay">...</strong></div>
+                <div class="pay-row"><span>Wave Pay:</span> <strong class="display-wave">...</strong></div>
             </div>
 
             <div class="input-group">
-                <label>ဝယ်ယူလိုသော TON ပမာဏ:</label>
-                <input type="number" id="ton-amount" placeholder="ဥပမာ - 5" step="0.1" oninput="calculateTotal()">
-                <div id="total-calc-display" class="total-calc"></div>
+                <label>ဝယ်ယူလိုသော Stars ပမာဏ (ဥပမာ - 50, 100):</label>
+                <input type="number" id="star-amount" placeholder="ဥပမာ - 50">
             </div>
 
             <div class="input-group">
-                <label>သင်၏ TON Wallet Address (ငွေလက်ခံမည့်လိပ်စာ):</label>
-                <input type="text" id="ton-address" placeholder="UQ... သို့မဟုတ် EQ...">
+                <label>Stars ဖြည့်သွင်းမည့် Telegram Username:</label>
+                <input type="text" id="star-target-username" placeholder="ဥပမာ - @username">
             </div>
 
             <div class="input-group">
                 <label>KBZPay / Wave Pay Transaction ID (နောက်ဆုံး ၆ လုံး):</label>
-                <input type="text" id="tran-id" placeholder="ဥပမာ - 123456" maxlength="10">
+                <input type="text" id="star-tran-id" placeholder="ဥပမာ - 123456" maxlength="10">
             </div>
 
             <div class="input-group">
                 <label>ငွေလွှဲပြေစာ (Receipt Photo) ထည့်ရန်:</label>
-                <input type="file" id="receipt-file" accept="image/*" onchange="previewImage(event)">
-                <img id="preview-img" alt="Receipt Preview">
+                <input type="file" id="star-receipt-file" accept="image/*" onchange="previewImage(event, 'star-preview-img')">
+                <img id="star-preview-img" class="preview-img" alt="Receipt Preview">
             </div>
 
-            <button type="button" class="buy-btn" id="submit-btn" onclick="submitOrder()">အော်ဒါ တင်မည်</button>
+            <button type="button" class="buy-btn" id="star-submit-btn" onclick="submitStarOrder()">Stars အော်ဒါ တင်မည်</button>
         </div>
 
+        <!-- History Tab -->
         <div id="history-tab" class="tab-content">
             <div class="title">Order History</div>
             <div class="subtitle" style="margin-bottom: 8px;">သင့်အော်ဒါများ၏ Status အခြေအနေ</div>
@@ -229,68 +206,36 @@
     </div>
 
     <script>
-        // ==================== OWNER CONFIGURATION ====================
+        // ==================== CONFIGURATION ====================
         const BOT_TOKEN = "8727961800:AAH0MwVr819OM8d0JtC8cbMTYPvM6yWLqhI"; 
-        const ADMIN_CHAT_ID = "1551804446"; 
-        const ACCOUNT_NAME = "Kaung Ko Ko Thant";
+        const ADMIN_CHAT_ID = "2009418896"; 
         const KPAY_NUMBER = "09751288906";
         const WAVEPAY_NUMBER = "09751288906";
-        // =============================================================
-
-        let currentRate = 0;
+        // =======================================================
 
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
 
-        document.getElementById('display-kpay').innerText = KPAY_NUMBER;
-        document.getElementById('display-wave').innerText = WAVEPAY_NUMBER;
-
-        // Admin မှ ပင်မ Bot ၏ Pinned Message သို့မဟုတ် Storage ဖြင့် ဈေးနှုန်း ရယူခြင်း
-        async function fetchTonRate() {
-            try {
-                // Telegram Bot Description / Storage မှ ရယူခြင်း သို့မဟုတ် Default သတ်မှတ်ခြင်း
-                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMyDescription`);
-                const data = await res.json();
-                if(data.ok && data.result.description && !isNaN(data.result.description.replace(/,/g, ''))) {
-                    currentRate = parseFloat(data.result.description.replace(/,/g, ''));
-                    document.getElementById('display-rate').innerText = currentRate.toLocaleString() + " Ks";
-                } else {
-                    document.getElementById('display-rate').innerText = "ဈေးနှုန်း မသတ်မှတ်ရသေးပါ";
-                }
-            } catch(e) {
-                document.getElementById('display-rate').innerText = "ဈေးနှုန်း စစ်မရပါ";
-            }
-        }
-        fetchTonRate();
-
-        function calculateTotal() {
-            const amount = parseFloat(document.getElementById('ton-amount').value);
-            const calcDisplay = document.getElementById('total-calc-display');
-            if (amount && currentRate > 0) {
-                const total = amount * currentRate;
-                calcDisplay.innerText = `💰 ကျသင့်ငွေ စုစုပေါင်း: ${total.toLocaleString()} Ks`;
-            } else {
-                calcDisplay.innerText = '';
-            }
-        }
+        document.querySelectorAll('.display-kpay').forEach(el => el.innerText = KPAY_NUMBER);
+        document.querySelectorAll('.display-wave').forEach(el => el.innerText = WAVEPAY_NUMBER);
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            if(tabId === 'buy-tab') {
-                document.querySelectorAll('.tab-btn')[0].classList.add('active');
-            } else {
-                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            const btnMap = { 'star-tab': 0, 'history-tab': 1 };
+            document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
+            
+            if(tabId === 'history-tab') {
                 loadOrderHistory();
             }
             document.getElementById(tabId).classList.add('active');
         }
 
-        function previewImage(event) {
+        function previewImage(event, previewId) {
             const input = event.target;
-            const preview = document.getElementById('preview-img');
+            const preview = document.getElementById(previewId);
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -302,15 +247,15 @@
         }
 
         function saveOrderToLocal(order) {
-            let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
+            let orders = JSON.parse(localStorage.getItem('star_orders') || '[]');
             orders.unshift(order);
-            localStorage.setItem('ton_orders', JSON.stringify(orders));
+            localStorage.setItem('star_orders', JSON.stringify(orders));
         }
 
         function loadOrderHistory() {
             const historyList = document.getElementById('history-list');
             const countBadge = document.getElementById('order-count-container');
-            let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
+            let orders = JSON.parse(localStorage.getItem('star_orders') || '[]');
 
             countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (${orders.length}) ခု`;
 
@@ -323,11 +268,11 @@
             orders.forEach((ord) => {
                 html += `<div class="history-item">
                     <div class="history-header">
-                        <span>💎 ${ord.amount} TON</span>
+                        <span>⭐ ${ord.amount} Stars</span>
                         <span class="status-waiting">⏳ Waiting</span>
                     </div>
                     <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
-                    <div class="history-detail">👛 Wallet: ${ord.address.substring(0, 8)}...${ord.address.substring(ord.address.length - 6)}</div>
+                    <div class="history-detail">👤 Target: ${ord.targetUser}</div>
                     <div class="history-detail" style="font-size: 10px; color: #64748b; margin-top: 4px;">📅 ${ord.date}</div>
                 </div>`;
             });
@@ -344,22 +289,22 @@
                 .replace(/'/g, "&#039;");
         }
 
-        async function submitOrder() {
-            const amount = document.getElementById('ton-amount').value;
-            const address = document.getElementById('ton-address').value.trim();
-            const tranId = document.getElementById('tran-id').value.trim();
-            const fileInput = document.getElementById('receipt-file');
-            const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+        // Submit Stars Order
+        async function submitStarOrder() {
+            const amount = document.getElementById('star-amount').value;
+            const targetUsername = document.getElementById('star-target-username').value.trim();
+            const tranId = document.getElementById('star-tran-id').value.trim();
+            const fileInput = document.getElementById('star-receipt-file');
+            const btn = document.getElementById('star-submit-btn');
 
-            if(!amount || !address || !tranId) {
-                alert('ကျေးဇူးပြု၍ ပမာဏ၊ Address နှင့် Transaction ID တို့ကို ဖြည့်စွက်ပေးပါခင်ဗျာ။');
+            if(!amount || !targetUsername || !tranId) {
+                alert('ကျေးဇူးပြု၍ Stars ပမာဏ၊ Telegram Username နှင့် Transaction ID တို့ကို ဖြည့်စွက်ပေးပါခင်ဗျာ။');
                 return;
             }
 
             const digitsOnly = tranId.replace(/\D/g, '');
             if (digitsOnly.length < 6) {
                 alert('⚠️ Transaction ID (နောက်ဆုံး ၆ လုံး) ကို မှန်ကန်စွာ ဂဏန်း ၆ လုံး ပြည့်အောင် ဖြည့်ပေးပါခင်ဗျာ။');
-                document.getElementById('tran-id').focus();
                 return;
             }
 
@@ -368,7 +313,6 @@
                 return;
             }
 
-            const btn = document.getElementById('submit-btn');
             btn.innerText = "ပြေစာပုံအား စစ်ဆေးနေပါသည်...";
             btn.disabled = true;
 
@@ -378,11 +322,9 @@
                 const ret = await worker.recognize(imageFile);
                 await worker.terminate();
 
-                const extractedText = ret.data.text;
-
-                if (!extractedText.includes(digitsOnly)) {
+                if (!ret.data.text.includes(digitsOnly)) {
                     alert('❌ ရိုက်ထည့်ထားသော Tran ID (' + digitsOnly + ') သည် ငွေလွှဲပြေစာ ပုံပါ နံပါတ်နှင့် မတူညီပါ။ ကျေးဇူးပြု၍ ပြန်လည်စစ်ဆေးပါ။');
-                    btn.innerText = "အော်ဒါ တင်မည်";
+                    btn.innerText = "Stars အော်ဒါ တင်မည်";
                     btn.disabled = false;
                     return;
                 }
@@ -392,44 +334,27 @@
 
             btn.innerText = "ခဏစောင့်ပါ...";
 
+            const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
             const username = (user && user.username) ? "@" + escapeHtml(user.username) : "Username မရှိပါ";
             const firstName = (user && user.first_name) ? escapeHtml(user.first_name) : "Customer";
-            
-            const nanoAmount = Math.round(parseFloat(amount) * 1000000000);
-            const tonkeeperUrl = "https://app.tonkeeper.com/transfer/" + address + "?amount=" + nanoAmount;
 
-            const captionMessage = `🛒 <b>အော်ဒါအသစ် ရောက်ရှိပါသည်။</b>\n\n` +
-                                   `👤 ဝယ်ယူသူ: ${firstName} (${username})\n` +
-                                   `💎 ပမာဏ: ${amount} TON\n` +
-                                   `👛 Wallet Address:\n<code>${escapeHtml(address)}</code>\n\n` +
-                                   `🧾 Tran ID (နောက်ဆုံး၆လုံး): <code>${escapeHtml(tranId)}</code>`;
+            const cleanUser = targetUsername.replace(/^@/, '');
+            const fragmentUrl = `https://fragment.com/stars/buy?recipient=${cleanUser}&quantity=${amount}`;
+
+            const caption = `⭐ <b>Telegram Stars အော်ဒါအသစ် ရောက်ရှိပါသည်။</b>\n\n` +
+                            `👤 ဝယ်ယူသူ: ${firstName} (${username})\n` +
+                            `⭐ Stars ပမာဏ: ${amount} Stars\n` +
+                            `🎯 လက်ခံမည့် Username: <b>${escapeHtml(targetUsername)}</b>\n\n` +
+                            `🧾 Tran ID (နောက်ဆုံး၆လုံး): <code>${escapeHtml(tranId)}</code>`;
 
             const replyMarkup = JSON.stringify({
-                inline_keyboard: [
-                    [{ text: "📲 Send TON via Tonkeeper", url: tonkeeperUrl }]
-                ]
+                inline_keyboard: [[{ text: "🎁 Send Stars via Fragment (TON)", url: fragmentUrl }]]
             });
-
-            const newOrder = {
-                amount: amount,
-                address: address,
-                tranId: tranId,
-                status: 'Waiting',
-                date: new Date().toLocaleString()
-            };
-
-            const handleSuccess = () => {
-                saveOrderToLocal(newOrder);
-                alert("အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ အော်ဒါ မှတ်တမ်းတွင် Status စစ်ဆေးနိုင်ပါသည်။");
-                switchTab('history-tab');
-                btn.innerText = "အော်ဒါ တင်မည်";
-                btn.disabled = false;
-            };
 
             const formData = new FormData();
             formData.append("chat_id", ADMIN_CHAT_ID);
             formData.append("photo", fileInput.files[0]);
-            formData.append("caption", captionMessage);
+            formData.append("caption", caption);
             formData.append("parse_mode", "HTML");
             formData.append("reply_markup", replyMarkup);
 
@@ -438,17 +363,28 @@
                     method: "POST",
                     body: formData
                 });
+
                 if(res.ok) {
-                    handleSuccess();
+                    saveOrderToLocal({
+                        amount: amount,
+                        targetUser: targetUsername,
+                        tranId: tranId,
+                        status: 'Waiting',
+                        date: new Date().toLocaleString()
+                    });
+                    alert("အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ Admin မှ စစ်ဆေးပြီး Stars ထည့်သွင်းပေးပါလိမ့်မည်။");
+                    switchTab('history-tab');
+                    btn.innerText = "Stars အော်ဒါ တင်မည်";
+                    btn.disabled = false;
                 } else {
                     const errData = await res.json();
                     alert("Error: " + (errData.description || "အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်"));
-                    btn.innerText = "အော်ဒါ တင်မည်";
+                    btn.innerText = "Stars အော်ဒါ တင်မည်";
                     btn.disabled = false;
                 }
             } catch (err) {
                 alert("ကွန်ရက် ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါသည်။");
-                btn.innerText = "အော်ဒါ တင်မည်";
+                btn.innerText = "Stars အော်ဒါ တင်မည်";
                 btn.disabled = false;
             }
         }
