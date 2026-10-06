@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buy Telegram Stars</title>
+    <title>Buy TON & Telegram Stars</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
@@ -24,7 +24,7 @@
             border-radius: 16px;
             padding: 20px;
             width: 100%;
-            max-width: 360px;
+            max-width: 380px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
         .tabs {
@@ -34,7 +34,7 @@
         }
         .tab-btn {
             flex: 1;
-            padding: 10px 4px;
+            padding: 10px 2px;
             background: none;
             border: none;
             color: #94a3b8;
@@ -151,15 +151,53 @@
 <body>
 
     <div class="card">
+        <!-- Tabs 3 ခု -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('star-tab')">⭐ Buy Stars</button>
+            <button class="tab-btn active" onclick="switchTab('ton-tab')">💎 Buy TON</button>
+            <button class="tab-btn" onclick="switchTab('star-tab')">⭐ Buy Stars</button>
             <button class="tab-btn" onclick="switchTab('history-tab')">📋 မှတ်တမ်း</button>
         </div>
 
-        <!-- Telegram Stars Tab -->
-        <div id="star-tab" class="tab-content active">
+        <!-- 1. TON Coin Buy Tab -->
+        <div id="ton-tab" class="tab-content active">
+            <div class="title">Buy TON Coin</div>
+            <div class="subtitle">KBZPay / Wave Pay ဖြင့် TON ဝယ်ယူရန်</div>
+
+            <div class="pay-info">
+                <div class="pay-title">📌 ငွေလွှဲရမည့် အကောင့်များ</div>
+                <div class="acc-name">( Account Name: Kaung Ko Ko Thant )</div>
+                <div class="pay-row"><span>KBZPay:</span> <strong class="display-kpay">...</strong></div>
+                <div class="pay-row"><span>Wave Pay:</span> <strong class="display-wave">...</strong></div>
+            </div>
+
+            <div class="input-group">
+                <label>ဝယ်ယူလိုသော TON ပမာဏ:</label>
+                <input type="number" id="ton-amount" placeholder="ဥပမာ - 1.5" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label>TON Coin လက်ခံမည့် Wallet Address (TON):</label>
+                <input type="text" id="ton-wallet-address" placeholder="UQ... သို့မဟုတ် EQ...">
+            </div>
+
+            <div class="input-group">
+                <label>KBZPay / Wave Pay Transaction ID (နောက်ဆုံး ၆ လုံး):</label>
+                <input type="text" id="ton-tran-id" placeholder="ဥပမာ - 123456" maxlength="10">
+            </div>
+
+            <div class="input-group">
+                <label>ငွေလွှဲပြေစာ (Receipt Photo) ထည့်ရန်:</label>
+                <input type="file" id="ton-receipt-file" accept="image/*" onchange="previewImage(event, 'ton-preview-img')">
+                <img id="ton-preview-img" class="preview-img" alt="Receipt Preview">
+            </div>
+
+            <button type="button" class="buy-btn" id="ton-submit-btn" onclick="submitTonOrder()">TON အော်ဒါ တင်မည်</button>
+        </div>
+
+        <!-- 2. Telegram Stars Buy Tab -->
+        <div id="star-tab" class="tab-content">
             <div class="title">Buy Telegram Stars</div>
-            <div class="subtitle">KBZPay / Wave Pay ဖြင့် ဝယ်ယူရန်</div>
+            <div class="subtitle">KBZPay / Wave Pay ဖြင့် Stars ဝယ်ယူရန်</div>
 
             <div class="pay-info">
                 <div class="pay-title">📌 ငွေလွှဲရမည့် အကောင့်များ</div>
@@ -192,7 +230,7 @@
             <button type="button" class="buy-btn" id="star-submit-btn" onclick="submitStarOrder()">Stars အော်ဒါ တင်မည်</button>
         </div>
 
-        <!-- History Tab -->
+        <!-- 3. History Tab -->
         <div id="history-tab" class="tab-content">
             <div class="title">Order History</div>
             <div class="subtitle" style="margin-bottom: 8px;">သင့်အော်ဒါများ၏ Status အခြေအနေ</div>
@@ -224,7 +262,7 @@
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            const btnMap = { 'star-tab': 0, 'history-tab': 1 };
+            const btnMap = { 'ton-tab': 0, 'star-tab': 1, 'history-tab': 2 };
             document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
             
             if(tabId === 'history-tab') {
@@ -247,15 +285,15 @@
         }
 
         function saveOrderToLocal(order) {
-            let orders = JSON.parse(localStorage.getItem('star_orders') || '[]');
+            let orders = JSON.parse(localStorage.getItem('all_orders') || '[]');
             orders.unshift(order);
-            localStorage.setItem('star_orders', JSON.stringify(orders));
+            localStorage.setItem('all_orders', JSON.stringify(orders));
         }
 
         function loadOrderHistory() {
             const historyList = document.getElementById('history-list');
             const countBadge = document.getElementById('order-count-container');
-            let orders = JSON.parse(localStorage.getItem('star_orders') || '[]');
+            let orders = JSON.parse(localStorage.getItem('all_orders') || '[]');
 
             countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (${orders.length}) ခု`;
 
@@ -266,13 +304,14 @@
 
             let html = '';
             orders.forEach((ord) => {
+                const icon = ord.type === 'TON' ? '💎' : '⭐';
                 html += `<div class="history-item">
                     <div class="history-header">
-                        <span>⭐ ${ord.amount} Stars</span>
+                        <span>${icon} ${ord.amount} ${ord.type}</span>
                         <span class="status-waiting">⏳ Waiting</span>
                     </div>
                     <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
-                    <div class="history-detail">👤 Target: ${ord.targetUser}</div>
+                    <div class="history-detail">🎯 Target: ${ord.target}</div>
                     <div class="history-detail" style="font-size: 10px; color: #64748b; margin-top: 4px;">📅 ${ord.date}</div>
                 </div>`;
             });
@@ -289,7 +328,109 @@
                 .replace(/'/g, "&#039;");
         }
 
-        // Submit Stars Order
+        // 1. Submit TON Order
+        async function submitTonOrder() {
+            const amount = document.getElementById('ton-amount').value;
+            const walletAddress = document.getElementById('ton-wallet-address').value.trim();
+            const tranId = document.getElementById('ton-tran-id').value.trim();
+            const fileInput = document.getElementById('ton-receipt-file');
+            const btn = document.getElementById('ton-submit-btn');
+
+            if(!amount || !walletAddress || !tranId) {
+                alert('ကျေးဇူးပြု၍ TON ပမာဏ၊ Wallet Address နှင့် Transaction ID တို့ကို ဖြည့်စွက်ပေးပါခင်ဗျာ။');
+                return;
+            }
+
+            const digitsOnly = tranId.replace(/\D/g, '');
+            if (digitsOnly.length < 6) {
+                alert('⚠️ Transaction ID (နောက်ဆုံး ၆ လုံး) ကို မှန်ကန်စွာ ဂဏန်း ၆ လုံး ပြည့်အောင် ဖြည့်ပေးပါခင်ဗျာ။');
+                return;
+            }
+
+            if (!fileInput.files || !fileInput.files[0]) {
+                alert('⚠️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
+                return;
+            }
+
+            btn.innerText = "ပြေစာပုံအား စစ်ဆေးနေပါသည်...";
+            btn.disabled = true;
+
+            try {
+                const imageFile = fileInput.files[0];
+                const worker = await Tesseract.createWorker('eng');
+                const ret = await worker.recognize(imageFile);
+                await worker.terminate();
+
+                if (!ret.data.text.includes(digitsOnly)) {
+                    alert('❌ ရိုက်ထည့်ထားသော Tran ID (' + digitsOnly + ') သည် ငွေလွှဲပြေစာ ပုံပါ နံပါတ်နှင့် မတူညီပါ။ ကျေးဇူးပြု၍ ပြန်လည်စစ်ဆေးပါ။');
+                    btn.innerText = "TON အော်ဒါ တင်မည်";
+                    btn.disabled = false;
+                    return;
+                }
+            } catch (err) {
+                console.log("OCR Error:", err);
+            }
+
+            btn.innerText = "ခဏစောင့်ပါ...";
+
+            const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+            const username = (user && user.username) ? "@" + escapeHtml(user.username) : "Username မရှိပါ";
+            const firstName = (user && user.first_name) ? escapeHtml(user.first_name) : "Customer";
+
+            // TON Transfer Deep Link for Tonkeeper / TON Wallets
+            const nanoTon = Math.floor(parseFloat(amount) * 1000000000);
+            const tonPayUrl = `ton://transfer/${walletAddress}?amount=${nanoTon}`;
+
+            const caption = `💎 <b>TON Coin အော်ဒါအသစ် ရောက်ရှိပါသည်။</b>\n\n` +
+                            `👤 ဝယ်ယူသူ: ${firstName} (${username})\n` +
+                            `💎 TON ပမာဏ: ${amount} TON\n` +
+                            `🎯 Wallet: <code>${escapeHtml(walletAddress)}</code>\n\n` +
+                            `🧾 Tran ID (နောက်ဆုံး၆လုံး): <code>${escapeHtml(tranId)}</code>`;
+
+            const replyMarkup = JSON.stringify({
+                inline_keyboard: [[{ text: "🚀 Send TON via Wallet App", url: tonPayUrl }]]
+            });
+
+            const formData = new FormData();
+            formData.append("chat_id", ADMIN_CHAT_ID);
+            formData.append("photo", fileInput.files[0]);
+            formData.append("caption", caption);
+            formData.append("parse_mode", "HTML");
+            formData.append("reply_markup", replyMarkup);
+
+            try {
+                const res = await fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendPhoto", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if(res.ok) {
+                    saveOrderToLocal({
+                        type: 'TON',
+                        amount: amount,
+                        target: walletAddress,
+                        tranId: tranId,
+                        status: 'Waiting',
+                        date: new Date().toLocaleString()
+                    });
+                    alert("TON အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ Admin မှ စစ်ဆေးပြီး TON Transfer လုပ်ပေးပါလိမ့်မည်။");
+                    switchTab('history-tab');
+                    btn.innerText = "TON အော်ဒါ တင်မည်";
+                    btn.disabled = false;
+                } else {
+                    const errData = await res.json();
+                    alert("Error: " + (errData.description || "အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်"));
+                    btn.innerText = "TON အော်ဒါ တင်မည်";
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert("ကွန်ရက် ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါသည်။");
+                btn.innerText = "TON အော်ဒါ တင်မည်";
+                btn.disabled = false;
+            }
+        }
+
+        // 2. Submit Stars Order
         async function submitStarOrder() {
             const amount = document.getElementById('star-amount').value;
             const targetUsername = document.getElementById('star-target-username').value.trim();
@@ -366,8 +507,9 @@
 
                 if(res.ok) {
                     saveOrderToLocal({
+                        type: 'Stars',
                         amount: amount,
-                        targetUser: targetUsername,
+                        target: targetUsername,
                         tranId: tranId,
                         status: 'Waiting',
                         date: new Date().toLocaleString()
