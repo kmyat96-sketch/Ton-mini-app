@@ -41,7 +41,7 @@ bot.onText(/\/price (.+)/, async (msg, match) => {
     bot.sendMessage(chatId, `✅ TON ဈေးနှုန်းအသစ်ကို **${Number(newPrice).toLocaleString()} MMK** သို့ ပြောင်းလဲပြီးပါပြီ။`, { parse_mode: 'Markdown' });
 });
 
-// Check pending orders and send photo + details to Admin
+// Check pending orders and send photo + details to Admin with Tonkeeper button
 setInterval(async () => {
     try {
         const orders = await firebaseRequest('orders', 'GET');
@@ -52,20 +52,27 @@ setInterval(async () => {
                 order.notified = true;
                 await firebaseRequest(`orders/${orderKey}/notified`, 'PUT', true);
 
-                const caption = `🔔 **ငွေလွှဲအော်ဒါအသစ် (${order.method})**\n\n` +
+                const caption = `🛒 **အော်ဒါသစ် ရောက်ရှိပါသည်**\n\n` +
                                 `👤 ဝယ်ယူသူ: ${order.name} (@${order.username})\n` +
                                 `💎 ပမာဏ: ${order.tonAmount} TON\n` +
                                 `💵 ကျသင့်ငွေ: ${order.totalMmk.toLocaleString()} MMK\n` +
-                                `📬 Wallet: \`${order.walletAddress}\`\n` +
-                                `🔢 Tran ID: \`${order.tranId}\``;
+                                `📬 Wallet Address:\n\`${order.walletAddress}\`\n\n` +
+                                `🔢 Tran ID (နောက်ဆုံး၆လုံး): ${order.tranId}`;
+
+                // Nano TON conversion (1 TON = 1,000,000,000 nanotons)
+                const nanoTon = Math.floor(order.tonAmount * 1000000000);
+                const tonkeeperUrl = `https://app.tonkeeper.com/transfer/${order.walletAddress}?amount=${nanoTon}&text=Withdrawal`;
 
                 const opts = {
                     parse_mode: 'Markdown',
                     reply_markup: {
                         inline_keyboard: [
                             [
+                                { text: '📱 Send TON via Tonkeeper', url: tonkeeperUrl }
+                            ],
+                            [
                                 { text: '✅ အတည်ပြုမည်', callback_data: `approve_${orderKey}_${order.userId}` },
-                                { text: '❌ ပယ်ချမည်', callback_data: `reject_${orderKey}` }
+                                { text: '❌ အော်ဒါပယ်ဖျက်မည်', callback_data: `reject_${orderKey}` }
                             ]
                         ]
                     }
@@ -101,16 +108,16 @@ bot.on('callback_query', async (callbackQuery) => {
             chat_id: msg.chat.id, message_id: msg.message_id, parse_mode: 'Markdown'
         }).catch(() => {});
 
-        bot.sendMessage(buyerUserId, `🎉 သင်ဝယ်ယူထားသော TON များကို အတည်ပြုပြီး ပေးပို့လိုက်ပါပြီ။ ကျေးဇူးတင်ပါသည်။ 🙏`);
+        bot.sendMessage(buyerUserId, `🎉 သင်ဝယ်ယူထားသော TON များကို စစ်ဆေးအတည်ပြုပြီး ပေးပို့လိုက်ပါပြီ။ ကျေးဇူးတင်ပါသည်။ 🙏`);
         bot.answerCallbackQuery(callbackQuery.id, { text: "အတည်ပြုပြီးပါပြီ" });
     } else if (action === 'reject') {
         await firebaseRequest(`orders/${orderKey}/status`, 'PUT', 'rejected');
-        bot.editMessageCaption(`${msg.caption}\n\n❌ **အခြေအနေ:** ပယ်ချလိုက်သည် (Rejected)`, {
+        bot.editMessageCaption(`${msg.caption}\n\n❌ **အခြေအနေ:** ပယ်ဖျက်လိုက်သည် (Cancelled)`, {
             chat_id: msg.chat.id, message_id: msg.message_id, parse_mode: 'Markdown'
         }).catch(() => {});
 
-        bot.sendMessage(buyerUserId, `❌ သင်၏ ငွေလွှဲပြေစာ သို့မဟုတ် Tran ID မမှန်ကန်သဖြင့် အော်ဒါပယ်ချခံရပါသည်။`);
-        bot.answerCallbackQuery(callbackQuery.id, { text: "ပယ်ချလိုက်ပါပြီ" });
+        bot.sendMessage(buyerUserId, `❌ သင်၏ အော်ဒါမှာ ငွေလွှဲပြေစာမမှန်ကန်သဖြင့် ပယ်ဖျက်ခံရပါသည်။`);
+        bot.answerCallbackQuery(callbackQuery.id, { text: "အော်ဒါကို ပယ်ဖျက်လိုက်ပါပြီ" });
     }
 });
 
