@@ -41,7 +41,7 @@ bot.onText(/\/price (.+)/, async (msg, match) => {
     bot.sendMessage(chatId, `✅ TON ဈေးနှုန်းအသစ်ကို **${Number(newPrice).toLocaleString()} MMK** သို့ ပြောင်းလဲပြီးပါပြီ။`, { parse_mode: 'Markdown' });
 });
 
-// Check pending orders and send photo + details to Admin with Tonkeeper button
+// Check pending orders and send photo + details to Admin
 setInterval(async () => {
     try {
         const orders = await firebaseRequest('orders', 'GET');
@@ -57,9 +57,8 @@ setInterval(async () => {
                                 `💎 ပမာဏ: ${order.tonAmount} TON\n` +
                                 `💵 ကျသင့်ငွေ: ${order.totalMmk.toLocaleString()} MMK\n` +
                                 `📬 Wallet Address:\n\`${order.walletAddress}\`\n\n` +
-                                `🔢 Tran ID (နောက်ဆုံး၆လုံး): ${order.tranId}`;
+                                `🔢 Tran ID: ${order.tranId}`;
 
-                // Nano TON conversion (1 TON = 1,000,000,000 nanotons)
                 const nanoTon = Math.floor(order.tonAmount * 1000000000);
                 const tonkeeperUrl = `https://app.tonkeeper.com/transfer/${order.walletAddress}?amount=${nanoTon}&text=Withdrawal`;
 
@@ -79,8 +78,17 @@ setInterval(async () => {
                 };
 
                 if (order.receiptImage) {
-                    const buffer = Buffer.from(order.receiptImage.split(',')[1], 'base64');
-                    bot.sendPhoto(ADMIN_CHAT_ID, buffer, { caption: caption, ...opts });
+                    try {
+                        let base64Data = order.receiptImage;
+                        if (base64Data.includes(',')) {
+                            base64Data = base64Data.split(',')[1];
+                        }
+                        const buffer = Buffer.from(base64Data, 'base64');
+                        await bot.sendPhoto(ADMIN_CHAT_ID, buffer, { caption: caption, ...opts });
+                    } catch (e) {
+                        console.error("Error sending photo:", e);
+                        bot.sendMessage(ADMIN_CHAT_ID, caption + "\n\n⚠️ (ပုံဖွင့်၍မရပါ)", opts);
+                    }
                 } else {
                     bot.sendMessage(ADMIN_CHAT_ID, caption, opts);
                 }
@@ -104,17 +112,31 @@ bot.on('callback_query', async (callbackQuery) => {
 
     if (action === 'approve') {
         await firebaseRequest(`orders/${orderKey}/status`, 'PUT', 'approved');
-        bot.editMessageCaption(`${msg.caption}\n\n✅ **အခြေအနေ:** အတည်ပြုပြီး (Approved)`, {
-            chat_id: msg.chat.id, message_id: msg.message_id, parse_mode: 'Markdown'
-        }).catch(() => {});
+        
+        if (msg.photo) {
+            bot.editMessageCaption(`${msg.caption}\n\n✅ **အခြေအနေ:** အတည်ပြုပြီး (Approved)`, {
+                chat_id: msg.chat.id, message_id: msg.message_id, parse_mode: 'Markdown'
+            }).catch(() => {});
+        } else {
+            bot.editMessageText(`${msg.text}\n\n✅ **အခြေအနေ:** အတည်ပြုပြီး (Approved)`, {
+                chat_id: msg.chat.id, message_id: msg.message_id, parse_mode: 'Markdown'
+            }).catch(() => {});
+        }
 
         bot.sendMessage(buyerUserId, `🎉 သင်ဝယ်ယူထားသော TON များကို စစ်ဆေးအတည်ပြုပြီး ပေးပို့လိုက်ပါပြီ။ ကျေးဇူးတင်ပါသည်။ 🙏`);
         bot.answerCallbackQuery(callbackQuery.id, { text: "အတည်ပြုပြီးပါပြီ" });
     } else if (action === 'reject') {
         await firebaseRequest(`orders/${orderKey}/status`, 'PUT', 'rejected');
-        bot.editMessageCaption(`${msg.caption}\n\n❌ **အခြေအနေ:** ပယ်ဖျက်လိုက်သည် (Cancelled)`, {
-            chat_id: msg.chat.id, message_id: msg.message_id, parse_mode: 'Markdown'
-        }).catch(() => {});
+        
+        if (msg.photo) {
+            bot.editMessageCaption(`${msg.caption}\n\n❌ **အခြေအနေ:** ပယ်ဖျက်လိုက်သည် (Cancelled)`, {
+                chat_id: msg.chat.id, message_id: msg.message_id, parse_mode: 'Markdown'
+            }).catch(() => {});
+        } else {
+            bot.editMessageText(`${msg.text}\n\n❌ **အခြေအနေ:** ပယ်ဖျက်လိုက်သည် (Cancelled)`, {
+                chat_id: msg.chat.id, message_id: msg.message_id, parse_mode: 'Markdown'
+            }).catch(() => {});
+        }
 
         bot.sendMessage(buyerUserId, `❌ သင်၏ အော်ဒါမှာ ငွေလွှဲပြေစာမမှန်ကန်သဖြင့် ပယ်ဖျက်ခံရပါသည်။`);
         bot.answerCallbackQuery(callbackQuery.id, { text: "အော်ဒါကို ပယ်ဖျက်လိုက်ပါပြီ" });
