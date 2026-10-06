@@ -245,7 +245,7 @@
         
         // URL လင့်ခ် (ဥပမာ ?price=16000) ပါလာပါက ၎င်းကိုသုံးမည်၊ မပါပါက 15500 ကိုသုံးမည်
         const urlParams = new URLSearchParams(window.location.search);
-        let currentTonPriceMMK = urlParams.has('price') ? parseFloat(urlParams.get('price')) : 15500;
+        let currentTonPriceMMK = urlParams.has('price') ? parseFloat(urlParams.get('price')) : 7200;
         // =======================================================
 
         firebase.initializeApp({ databaseURL: FIREBASE_DB_URL });
