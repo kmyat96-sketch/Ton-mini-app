@@ -6,8 +6,6 @@
     <title>TON Shop Mini App</title>
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- TON Connect UI SDK -->
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 15px; color: #333; }
         .container { max-width: 400px; margin: auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -17,8 +15,7 @@
         .tab button.active { background: #0088cc; color: white; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        input, select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
-        #ton-connect-button { margin: 15px 0; display: flex; justify-content: center; }
+        input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
         .btn { width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; }
         .btn:hover { background: #218838; }
         .hidden { display: none; }
@@ -45,42 +42,26 @@
             <input type="text" id="totalMmk" readonly style="background: #e9ecef; font-weight: bold; color: #d9534f;">
         </div>
 
+        <div style="font-size: 13px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+            📌 <b>ငွေလွှဲရန် အကောင့်များ:</b><br>
+            • KBZ Pay: <b>09751288906</b><br>
+            • Wave Money: <b>09751288906</b><br>
+            (ငွေလွှဲပြီးပါက ပြေစာပုံနှင့် Tran ID တင်ပေးပါ။)
+        </div>
+
         <div class="form-group">
-            <label>ငွေပေးချေမည့် နည်းလမ်း</label>
-            <select id="payMethod" onchange="togglePaymentMethod()">
-                <option value="tonconnect">Tonkeeper (Auto TON Transfer)</option>
-                <option value="kpay">KPay / Wave (Manual with Screenshot)</option>
-            </select>
+            <label>ငွေလွှဲ Tran ID (သို့) ဖုန်းနံပါတ်နောက်ဆုံး ၆ လုံး</label>
+            <input type="text" id="tranId" placeholder="ဥပမာ - 123456">
         </div>
-
-        <!-- Tonkeeper Connect Button -->
-        <div id="tonConnectSection">
-            <div id="ton-connect-button"></div>
-            <button class="btn" onclick="buyWithTonConnect()">TON ဖြင့် ငွေပေးချေမည်</button>
+        <div class="form-group">
+            <label>ငွေလွှဲပြေစာ ပုံ (Screenshot)</label>
+            <input type="file" id="receiptImage" accept="image/*">
         </div>
-
-        <!-- KPay / Wave Manual Section with Screenshot -->
-        <div id="kpaySection" class="hidden">
-            <div style="font-size: 13px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
-                📌 <b>ငွေလွှဲရန် အကောင့်များ:</b><br>
-                • KBZ Pay: <b>09751288906</b><br>
-                • Wave Money: <b>09751288906</b><br>
-                (ငွေလွှဲပြီးပါက ပြေစာပုံနှင့် Tran ID တင်ပေးပါ။)
-            </div>
-            <div class="form-group">
-                <label>ငွေလွှဲ Tran ID (သို့) ဖုန်းနံပါတ်နောက်ဆုံး ၆ လုံး</label>
-                <input type="text" id="tranId" placeholder="ဥပမာ - 123456">
-            </div>
-            <div class="form-group">
-                <label>ငွေလွှဲပြေစာ ပုံ (Screenshot)</label>
-                <input type="file" id="receiptImage" accept="image/*">
-            </div>
-            <div class="form-group">
-                <label>လက်ခံမည့် Wallet Address (Tonkeeper)</label>
-                <input type="text" id="manualWallet" placeholder="EQ... your wallet address">
-            </div>
-            <button class="btn" onclick="submitKPayOrder()">အော်ဒါတင်မည်</button>
+        <div class="form-group">
+            <label>လက်ခံမည့် Wallet Address (Tonkeeper)</label>
+            <input type="text" id="manualWallet" placeholder="EQ... your wallet address">
         </div>
+        <button class="btn" onclick="submitOrder()">အော်ဒါတင်မည်</button>
     </div>
 
     <!-- History Tab -->
@@ -96,11 +77,6 @@
 
     const FIREBASE_REST_URL = "https://ton-buy-bot-default-rtdb.firebaseio.com";
     let currentTonPrice = 7000;
-
-    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-        manifestUrl: 'https://raw.githubusercontent.com/kmyat96-sketch/Ton-mini-app/main/tonconnect-manifest.json',
-        buttonRootId: 'ton-connect-button'
-    });
 
     async function fetchPrice() {
         try {
@@ -118,17 +94,6 @@
         document.getElementById('totalMmk').value = (amount * currentTonPrice).toLocaleString() + " MMK";
     }
 
-    function togglePaymentMethod() {
-        let method = document.getElementById('payMethod').value;
-        if (method === 'tonconnect') {
-            document.getElementById('tonConnectSection').classList.remove('hidden');
-            document.getElementById('kpaySection').classList.add('hidden');
-        } else {
-            document.getElementById('tonConnectSection').classList.add('hidden');
-            document.getElementById('kpaySection').classList.remove('hidden');
-        }
-    }
-
     function switchTab(tab) {
         if (tab === 'buy') {
             document.getElementById('buySection').classList.remove('hidden');
@@ -144,41 +109,7 @@
         }
     }
 
-    async function buyWithTonConnect() {
-        if (!tonConnectUI.connected) {
-            alert('ကျေးဇူးပြု၍ ပထမဦးစွာ Tonkeeper ကို ချိတ်ဆက်ပါ (Connect Wallet)');
-            return;
-        }
-        let amount = document.getElementById('tonAmount').value;
-        let nanoTon = Math.floor(amount * 1000000000).toString();
-        
-        const transaction = {
-            validUntil: Math.floor(Date.now() / 1000) + 300,
-            messages: [
-                {
-                    address: "EQAdminWalletAddressHereReplaceIt", 
-                    amount: nanoTon
-                }
-            ]
-        };
-
-        try {
-            let result = await tonConnectUI.sendTransaction(transaction);
-            alert('ငွေပေးချေမှု အောင်မြင်ပါသည်။');
-            saveOrderToFirebase({
-                tonAmount: amount,
-                totalMmk: amount * currentTonPrice,
-                walletAddress: tonConnectUI.wallet.account.address,
-                tranId: result.boc,
-                status: 'approved',
-                method: 'TonConnect'
-            });
-        } catch (e) {
-            alert('ငွေပေးချေမှု ပျက်ကွက်သည် သို့မဟုတ် ပယ်ဖျက်လိုက်ပါပြီ။');
-        }
-    }
-
-    async function submitKPayOrder() {
+    async function submitOrder() {
         let amount = document.getElementById('tonAmount').value;
         let tranId = document.getElementById('tranId').value;
         let wallet = document.getElementById('manualWallet').value;
@@ -194,32 +125,29 @@
         reader.onload = async function () {
             let base64Image = reader.result;
             
-            await saveOrderToFirebase({
+            let orderData = {
                 tonAmount: amount,
                 totalMmk: amount * currentTonPrice,
                 walletAddress: wallet,
                 tranId: tranId,
                 receiptImage: base64Image,
                 status: 'pending',
-                method: 'KPay/Wave'
+                method: 'KPay / Wave',
+                userId: tg.initDataUnsafe?.user?.id || '12345',
+                name: tg.initDataUnsafe?.user?.first_name || 'User',
+                username: tg.initDataUnsafe?.user?.username || 'unknown',
+                timestamp: Date.now()
+            };
+
+            await fetch(`${FIREBASE_REST_URL}/orders.json`, {
+                method: 'POST',
+                body: JSON.stringify(orderData),
+                headers: { 'Content-Type': 'application/json' }
             });
 
             alert('အော်ဒါတင်ခြင်း အောင်မြင်ပါသည်။ Admin အတည်ပြုသည်နှင့် TON ရောက်ရှိပါမည်။');
             tg.close();
         };
-    }
-
-    async function saveOrderToFirebase(orderData) {
-        orderData.userId = tg.initDataUnsafe?.user?.id || '12345';
-        orderData.name = tg.initDataUnsafe?.user?.first_name || 'User';
-        orderData.username = tg.initDataUnsafe?.user?.username || 'unknown';
-        orderData.timestamp = Date.now();
-
-        await fetch(`${FIREBASE_REST_URL}/orders.json`, {
-            method: 'POST',
-            body: JSON.stringify(orderData),
-            headers: { 'Content-Type': 'application/json' }
-        });
     }
 
     async function loadHistory() {
@@ -240,7 +168,7 @@
                     <div style="background:#f8f9fa; padding:10px; margin-bottom:8px; border-radius:6px; border-left:4px solid ${order.status==='approved'?'28a745':'ffc107'}">
                         <b>💎 ${order.tonAmount} TON</b> (${order.totalMmk.toLocaleString()} MMK)<br>
                         Status: <b>${order.status}</b><br>
-                        <small>နည်းလမ်း: ${order.method}</small>
+                        <small>နည်းလမ်း: KPay / Wave</small>
                     </div>
                 `;
             }
