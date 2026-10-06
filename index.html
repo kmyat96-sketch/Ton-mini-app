@@ -3,70 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Buy Bot Mini App</title>
-    <!-- Telegram Web App SDK -->
+    <title>TON Buy Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <!-- Tesseract.js for OCR -->
-    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
-            --accent-color: #38bdf8;
-            --button-bg: #0284c7;
-            --button-hover: #0369a1;
-            --border-color: #334155;
+            --bg-color: #18222d;
+            --card-bg: #232e3c;
+            --text-color: #ffffff;
+            --accent-color: #2ea6ff;
+            --secondary-color: #2b3847;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 16px;
+            padding: 15px;
         }
         .container {
             max-width: 480px;
             margin: 0 auto;
         }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .price-badge {
-            background: linear-gradient(135deg, #0284c7, #2563eb);
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
-            display: inline-block;
-            margin-top: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
+        /* Tabs */
         .tabs {
             display: flex;
-            background-color: var(--card-bg);
+            background: var(--secondary-color);
             border-radius: 12px;
-            padding: 4px;
+            padding: 5px;
             margin-bottom: 20px;
-            border: 1px solid var(--border-color);
         }
         .tab-btn {
             flex: 1;
-            padding: 10px;
-            border: none;
             background: none;
-            color: var(--text-color);
+            border: none;
+            color: #8c9ba5;
+            padding: 10px;
+            font-size: 15px;
             font-weight: bold;
-            border-radius: 8px;
             cursor: pointer;
+            border-radius: 8px;
             transition: 0.3s;
         }
         .tab-btn.active {
-            background-color: var(--button-bg);
+            background: var(--accent-color);
             color: white;
         }
         .tab-content {
@@ -75,381 +56,248 @@
         .tab-content.active {
             display: block;
         }
+        /* Card & Form */
         .card {
             background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+        .price-banner {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #2ea6ff, #0077cc);
+            padding: 12px;
             border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
         }
         .form-group {
-            margin-bottom: 14px;
+            margin-bottom: 15px;
         }
         label {
             display: block;
-            margin-bottom: 6px;
-            font-size: 14px;
-            color: #94a3b8;
+            font-size: 13px;
+            color: #a8b2bc;
+            margin-bottom: 5px;
         }
         input, select {
             width: 100%;
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background-color: #0f172a;
-            color: white;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-        button.action-btn {
-            width: 100%;
             padding: 12px;
-            border: none;
+            background: var(--bg-color);
+            border: 1px solid #3b4b5e;
             border-radius: 8px;
-            background-color: var(--button-bg);
             color: white;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 10px;
-        }
-        button.action-btn:hover {
-            background-color: var(--button-hover);
+            font-size: 14px;
+            box-sizing: border-box;
         }
         .payment-info {
-            background: #1e293b;
+            background: rgba(46, 166, 255, 0.1);
             border-left: 4px solid var(--accent-color);
-            padding: 10px;
-            font-size: 13px;
-            margin-bottom: 14px;
-            border-radius: 0 8px 8px 0;
-        }
-        .preview-img {
-            max-width: 100%;
-            max-height: 150px;
-            margin-top: 10px;
-            display: none;
-            border-radius: 8px;
-        }
-        .history-item {
-            background: #0f172a;
             padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border: 1px solid var(--border-color);
-        }
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-            margin-bottom: 6px;
-        }
-        .history-detail {
+            border-radius: 6px;
             font-size: 13px;
-            color: #94a3b8;
+            margin-bottom: 15px;
+            line-height: 1.5;
         }
-        .status-badge {
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
+        .btn-primary {
+            width: 100%;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
+            transition: 0.2s;
         }
-        .status-success { background: #166534; color: #4ade80; }
-        .status-waiting { background: #854d0e; color: #facc15; }
-        .empty-history {
-            text-align: center;
-            color: #64748b;
-            padding: 20px;
+        .btn-primary:active {
+            transform: scale(0.98);
         }
+        /* History Item */
+        .history-item {
+            background: var(--bg-color);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            border-left: 4px solid #ffc107;
+        }
+        .history-item.success { border-left-color: #28a745; }
+        .history-item.rejected { border-left-color: #dc3545; }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <div class="header">
-            <h2>💎 TON Buy Mini App</h2>
-            <div id="ton-price-display" class="price-badge">💎 1 TON = ဇယားဆွဲနေသည်...</div>
-        </div>
-
+        <!-- Tabs Navigation -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('ton-tab')">ဝယ်ယူမည်</button>
-            <button class="tab-btn" onclick="switchTab('history-tab')">အော်ဒါမှတ်တမ်း</button>
+            <button class="tab-btn active" onclick="switchTab('buy')">💎 TON ဝယ်ရန်</button>
+            <button class="tab-btn" onclick="switchTab('history')">📜 History</button>
         </div>
 
-        <!-- TON Buy Tab -->
-        <div id="ton-tab" class="tab-content active">
+        <!-- TAB 1: TON ဝယ်ရန် -->
+        <div id="buy-tab" class="tab-content active">
             <div class="card">
+                <div class="price-banner" id="priceDisplay">1 TON = Loading...</div>
+                
                 <div class="form-group">
                     <label>ဝယ်ယူလိုသော TON ပမာဏ</label>
-                    <input type="number" id="ton-amount" placeholder="ဥပမာ - 2" step="0.1" oninput="calculateTotal()">
-                </div>
-                <div class="form-group">
-                    <label>ကျသင့်ငွေ (MMK)</label>
-                    <input type="text" id="mmk-amount" readonly placeholder="0 MMK">
-                </div>
-                <div class="form-group">
-                    <label>သင်၏ TON Wallet Address</label>
-                    <input type="text" id="ton-wallet-address" placeholder="UQ... ဖြင့်စသော your wallet address">
+                    <input type="number" id="tonAmount" placeholder="ဥပမာ - 2" min="0.1" step="any" oninput="calculateTotal()">
                 </div>
 
+                <div class="form-group">
+                    <label>ကျသင့်ငွေ (MMK)</label>
+                    <input type="text" id="totalMmk" readonly value="0 MMK" style="color: #4cd137; font-weight: bold;">
+                </div>
+
+                <div class="form-group">
+                    <label>သင်၏ TON Wallet Address</label>
+                    <input type="text" id="walletAddress" placeholder="UQ... ဖြင့်စသော your wallet address">
+                </div>
+
+                <!-- ငွေလွှဲရန် ဖုန်းနံပါတ်များ -->
                 <div class="payment-info">
-                    <b>ငွေလွှဲရန် နံပါတ်များ:</b><br>
-                    - KPay: <span class="display-kpay">09751288906</span> (Kaung Ko Ko Thant)<br>
-                    - WavePay: <span class="display-wave">09751288906</span> (Kaung Ko Ko Thant)
+                    <b>📌 ငွေလွှဲရန် နံပါတ်များ:</b><br>
+                    • KPay: <span id="kpayNum">09751288906</span> (Kaung Ko Ko Thant)<br>
+                    • WavePay: <span id="waveNum">09751288906</span> (Kaung Ko Ko Thant)
                 </div>
 
                 <div class="form-group">
                     <label>ငွေလွှဲ Tran ID (နောက်ဆုံး ၆ လုံး)</label>
-                    <input type="text" id="ton-tran-id" placeholder="ဥပမာ - 123456" maxlength="6">
+                    <input type="text" id="tranId" placeholder="ဥပမာ - 123456" maxlength="6">
                 </div>
 
                 <div class="form-group">
                     <label>ငွေလွှဲပြေစာ (Screenshot) တင်ရန်</label>
-                    <input type="file" id="ton-receipt-file" accept="image/*" onchange="previewImage(event, 'ton-preview')">
-                    <img id="ton-preview" class="preview-img">
+                    <input type="file" id="receiptFile" accept="image/*">
                 </div>
 
-                <button class="action-btn" id="ton-submit-btn" onclick="submitTonOrder()">TON အော်ဒါ တင်မည်</button>
+                <button class="btn-primary" onclick="submitOrder()">📤 TON အော်ဒါ တင်မည်</button>
             </div>
         </div>
 
-        <!-- History Tab -->
+        <!-- TAB 2: History -->
         <div id="history-tab" class="tab-content">
             <div class="card">
-                <div id="order-count-container" style="font-weight: bold; margin-bottom: 12px; color: var(--accent-color);">📊 စုစုပေါင်း အော်ဒါ: (0) ခု</div>
-                <div id="history-list">
-                    <div class="empty-history">အော်ဒါ မှတ်တမ်း မရှိသေးပါခင်ဗျာ။</div>
-                </div>
+                <h3>ဝယ်ယူခဲ့မှု မှတ်တမ်းများ</h3>
+                <div id="historyList">မှတ်တမ်းများ ရှာမတွေ့သေးပါ...</div>
             </div>
         </div>
     </div>
 
     <script>
-        const BOT_TOKEN = "8727961800:AAH0MwVr819OM8d0JtC8cbMTYPvM6yWLqhI"; 
-        const ADMIN_CHAT_ID = "2009418896"; 
-        const KPAY_NUMBER = "09751288906";
-        const WAVEPAY_NUMBER = "09751288906";
-        const FIREBASE_DB_URL = "https://ton-buy-bot-default-rtdb.firebaseio.com"; 
-        
-        let currentTonPriceMMK = 15500;
-
-        firebase.initializeApp({ databaseURL: FIREBASE_DB_URL });
-        const db = firebase.database();
-
         const tg = window.Telegram.WebApp;
-        tg.ready();
         tg.expand();
 
-        document.querySelectorAll('.display-kpay').forEach(el => el.innerText = KPAY_NUMBER);
-        document.querySelectorAll('.display-wave').forEach(el => el.innerText = WAVEPAY_NUMBER);
+        // Firebase Configuration (သင့်ရဲ့ Database URL ထည့်ပါ)
+        const firebaseConfig = {
+            databaseURL: "https://ton-buy-bot-default-rtdb.firebaseio.com"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        db.ref('settings/tonPrice').on('value', (snapshot) => {
-            const price = snapshot.val();
-            if (price) {
-                currentTonPriceMMK = parseFloat(price);
-            } else {
-                db.ref('settings').set({ tonPrice: 15500 });
-                currentTonPriceMMK = 15500;
+        let currentRate = 15500; // Default price
+
+        // Real-time ဈေးနှုန်းဆွဲထုတ်ခြင်း
+        db.ref('ton_price').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val) {
+                currentRate = Number(val);
+                document.getElementById('priceDisplay').innerText = `1 TON = ${currentRate.toLocaleString()} MMK`;
+                calculateTotal();
             }
-            document.getElementById('ton-price-display').innerText = `💎 1 TON = ${currentTonPriceMMK.toLocaleString()} MMK`;
-            calculateTotal();
         });
 
         function calculateTotal() {
-            const amount = parseFloat(document.getElementById('ton-amount').value) || 0;
-            const totalMmk = amount * currentTonPriceMMK;
-            document.getElementById('mmk-amount').value = totalMmk > 0 ? totalMmk.toLocaleString() + " MMK" : "";
+            const ton = parseFloat(document.getElementById('tonAmount').value) || 0;
+            const total = ton * currentRate;
+            document.getElementById('totalMmk').value = total.toLocaleString() + " MMK";
         }
 
-        function switchTab(tabId) {
+        function switchTab(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            const btnMap = { 'ton-tab': 0, 'history-tab': 1 };
-            document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
-            
-            if(tabId === 'history-tab') {
-                loadOrderHistory();
-            }
-            document.getElementById(tabId).classList.add('active');
-        }
-
-        function previewImage(event, previewId) {
-            const input = event.target;
-            const preview = document.getElementById(previewId);
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                }
-                reader.readAsDataURL(input.files[0]);
+            if(tabName === 'buy') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('buy-tab').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('history-tab').classList.add('active');
+                loadHistory();
             }
         }
 
-        function loadOrderHistory() {
-            const historyList = document.getElementById('history-list');
-            const countBadge = document.getElementById('order-count-container');
-            const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
-            const userId = user ? user.id : 'guest_user';
+        function submitOrder() {
+            const ton = document.getElementById('tonAmount').value;
+            const wallet = document.getElementById('walletAddress').value;
+            const tranId = document.getElementById('tranId').value;
 
-            db.ref('orders/' + userId).on('value', (snapshot) => {
-                const data = snapshot.val();
-                if(!data) {
-                    countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (0) ခု`;
-                    historyList.innerHTML = '<div class="empty-history">အော်ဒါ မှတ်တမ်း မရှိသေးပါခင်ဗျာ။</div>';
-                    return;
-                }
-
-                const orders = Object.entries(data).reverse();
-                countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (${orders.length}) ခု`;
-
-                let html = '';
-                orders.forEach(([orderId, ord]) => {
-                    const isSuccess = ord.status === 'Success';
-                    const badgeClass = isSuccess ? 'status-success' : 'status-waiting';
-                    const statusText = isSuccess ? '✅ Success' : '⏳ Waiting';
-
-                    html += `<div class="history-item">
-                        <div class="history-header">
-                            <span>💎 ${ord.amount} ${ord.type}</span>
-                            <span class="status-badge ${badgeClass}" onclick="toggleOrderStatus('${userId}', '${orderId}', '${ord.status}')">${statusText} (ပြောင်းရန်)</span>
-                        </div>
-                        <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
-                        <div class="history-detail">🎯 Target: ${ord.target}</div>
-                        <div class="history-detail" style="font-size: 10px; color: #64748b; margin-top: 4px;">📅 ${ord.date}</div>
-                    </div>`;
-                });
-                historyList.innerHTML = html;
-            });
-        }
-
-        async function toggleOrderStatus(userId, orderId, currentStatus) {
-            const newStatus = currentStatus === 'Success' ? 'Waiting' : 'Success';
-            try {
-                await db.ref(`orders/${userId}/${orderId}`).update({ status: newStatus });
-            } catch (err) {
-                alert("Status ပြောင်းလဲရာတွင် အမှားအယွင်းရှိပါသည်");
-            }
-        }
-
-        function escapeHtml(text) {
-            if (!text) return "";
-            return String(text)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        async function submitTonOrder() {
-            const amount = document.getElementById('ton-amount').value;
-            const walletAddress = document.getElementById('ton-wallet-address').value.trim();
-            const tranId = document.getElementById('ton-tran-id').value.trim();
-            const fileInput = document.getElementById('ton-receipt-file');
-            const btn = document.getElementById('ton-submit-btn');
-
-            if(!amount || !walletAddress || !tranId) {
-                alert('ကျေးဇူးပြု၍ TON ပမာဏ၊ Wallet Address နှင့် Transaction ID တို့ကို ဖြည့်စွက်ပေးပါခင်ဗျာ။');
+            if (!ton || !wallet || !tranId) {
+                alert('အချက်အလက်များကို အပြည့်အစုံ ဖြည့်စွက်ပေးပါ!');
                 return;
             }
 
-            const digitsOnly = tranId.replace(/\D/g, '');
-            if (digitsOnly.length < 6) {
-                alert('⚠️ Transaction ID (နောက်ဆုံး ၆ လုံး) ကို မှန်ကန်စွာ ဂဏန်း ၆ လုံး ပြည့်အောင် ဖြည့်ပေးပါခင်ဗျာ။');
-                return;
-            }
+            const user = tg.initDataUnsafe?.user || { id: 12345, first_name: "User", username: "unknown" };
+            const totalMmk = ton * currentRate;
 
-            if (!fileInput.files || !fileInput.files[0]) {
-                alert('⚠️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
-                return;
-            }
-
-            btn.innerText = "ပြေစာပုံအား စစ်ဆေးနေပါသည်...";
-            btn.disabled = true;
-
-            try {
-                const imageFile = fileInput.files[0];
-                const worker = await Tesseract.createWorker('eng');
-                const ret = await worker.recognize(imageFile);
-                await worker.terminate();
-
-                if (!ret.data.text.includes(digitsOnly)) {
-                    alert('❌ ရိုက်ထည့်ထားသော Tran ID (' + digitsOnly + ') သည် ငွေလွှဲပြေစာ ပုံပါ နံပါတ်နှင့် မတူညီပါ။ ကျေးဇူးပြု၍ ပြန်လည်စစ်ဆေးပါ။');
-                    btn.innerText = "TON အော်ဒါ တင်မည်";
-                    btn.disabled = false;
-                    return;
-                }
-            } catch (err) {
-                console.log("OCR Error:", err);
-            }
-
-            btn.innerText = "ခဏစောင့်ပါ...";
-
-            const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
-            const userId = user ? user.id : 'guest_user';
-            const username = (user && user.username) ? "@" + escapeHtml(user.username) : "Username မရှိပါ";
-            const firstName = (user && user.first_name) ? escapeHtml(user.first_name) : "Customer";
-
-            const orderId = "ORD_" + Date.now();
-            const nanoTon = Math.floor(parseFloat(amount) * 1000000000);
-            const tonPayUrl = `https://app.tonkeeper.com/transfer/${walletAddress}?amount=${nanoTon}`;
-
-            await db.ref(`orders/${userId}/${orderId}`).set({
-                orderId: orderId,
-                userId: userId,
-                type: 'TON',
-                amount: amount,
-                target: walletAddress,
+            const orderData = {
+                userId: user.id,
+                name: user.first_name,
+                username: user.username || 'NoUsername',
+                tonAmount: ton,
+                totalMmk: totalMmk,
+                walletAddress: wallet,
                 tranId: tranId,
-                status: 'Waiting',
-                date: new Date().toLocaleString()
+                status: 'pending',
+                timestamp: Date.now()
+            };
+
+            // Firebase သို့ အော်ဒါပို့ခြင်း
+            db.ref('orders').push(orderData).then(() => {
+                alert('အော်ဒါတင်ခြင်း အောင်မြင်ပါသည်။ Admin အတည်ပြုချက်ကို စောင့်ဆိုင်းပေးပါ။');
+                // Bot ဆီသို့ အကြောင်းကြားချက် ပို့ရန် (သို့မဟုတ် ပြီးဆုံးကြောင်းပြရန်)
+                switchTab('history');
+            }).catch(err => {
+                alert('အမှားအယွင်းရှိသည်: ' + err.message);
             });
+        }
 
-            const totalMmkCalc = (parseFloat(amount) * currentTonPriceMMK).toLocaleString();
-            const caption = `💎 <b>TON Coin အော်ဒါအသစ် ရောက်ရှိပါသည်။</b>\n\n` +
-                            `👤 ဝယ်ယူသူ: ${firstName} (${username})\n` +
-                            `💎 TON ပမာဏ: ${amount} TON (ကျသင့်ငွေ: ${totalMmkCalc} MMK)\n` +
-                            `🎯 Wallet: <code>${escapeHtml(walletAddress)}</code>\n\n` +
-                            `🧾 Tran ID (နောက်ဆုံး၆လုံး): <code>${escapeHtml(tranId)}</code>`;
-
-            const replyMarkup = JSON.stringify({
-                inline_keyboard: [
-                    [{ text: "🚀 Send TON via Tonkeeper", url: tonPayUrl }]
-                ]
-            });
-
-            const formData = new FormData();
-            formData.append("chat_id", ADMIN_CHAT_ID);
-            formData.append("photo", fileInput.files[0]);
-            formData.append("caption", caption);
-            formData.append("parse_mode", "HTML");
-            formData.append("reply_markup", replyMarkup);
-
-            try {
-                const res = await fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendPhoto", {
-                    method: "POST",
-                    body: formData
-                });
-
-                if(res.ok) {
-                    alert("TON အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။");
-                    switchTab('history-tab');
-                    btn.innerText = "TON အော်ဒါ တင်မည်";
-                    btn.disabled = false;
-                } else {
-                    const errData = await res.json();
-                    alert("Error: " + (errData.description || "အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်"));
-                    btn.innerText = "TON အော်ဒါ တင်မည်";
-                    btn.disabled = false;
+        function loadHistory() {
+            const user = tg.initDataUnsafe?.user || { id: 12345 };
+            db.ref('orders').orderByChild('userId').equalTo(user.id).on('value', (snapshot) => {
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '';
+                
+                const val = snapshot.val();
+                if (!val) {
+                    historyList.innerHTML = 'ဝယ်ယူထားသော မှတ်တမ်း မရှိသေးပါ။';
+                    return;
                 }
-            } catch (err) {
-                alert("ကွန်ရက် ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါသည်။");
-                btn.innerText = "TON အော်ဒါ တင်မည်";
-                btn.disabled = false;
-            }
+
+                Object.values(val).reverse().forEach(order => {
+                    let statusText = 'စောင့်ဆိုင်းဆဲ (Pending)';
+                    let statusClass = '';
+                    if(order.status === 'approved') {
+                        statusText = 'အောင်မြင်သည် (Approved)';
+                        statusClass = 'success';
+                    } else if(order.status === 'rejected') {
+                        statusText = 'ပယ်ချခံရသည် (Rejected)';
+                        statusClass = 'rejected';
+                    }
+
+                    const div = document.createElement('div');
+                    div.className = `history-item ${statusClass}`;
+                    div.innerHTML = `
+                        <b>💎 ပမာဏ:</b> ${order.tonAmount} TON (${order.totalMmk.toLocaleString()} MMK)<br>
+                        <b>📌 Tran ID:</b> ${order.tranId}<br>
+                        <b>🔹 အခြေအနေ:</b> ${statusText}
+                    `;
+                    historyList.appendChild(div);
+                });
+            });
         }
     </script>
 </body>
