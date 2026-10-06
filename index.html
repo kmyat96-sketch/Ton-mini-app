@@ -1,296 +1,283 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="my">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buy TON Crystal</title>
+    <title>TON Buy Bot Mini App</title>
+    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- Tesseract.js for OCR -->
+    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
     <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --accent-color: #38bdf8;
+            --button-bg: #0284c7;
+            --button-hover: #0369a1;
+            --border-color: #334155;
+        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #0f172a;
-            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             padding: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
         }
-        .card {
-            background-color: #1e293b;
-            border-radius: 16px;
-            padding: 20px;
-            width: 100%;
-            max-width: 360px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .price-badge {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
         .tabs {
             display: flex;
-            margin-bottom: 16px;
-            border-bottom: 1px solid #334155;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
         }
         .tab-btn {
             flex: 1;
             padding: 10px;
-            background: none;
             border: none;
-            color: #94a3b8;
+            background: none;
+            color: var(--text-color);
             font-weight: bold;
-            font-size: 14px;
+            border-radius: 8px;
             cursor: pointer;
-            border-bottom: 2px solid transparent;
+            transition: 0.3s;
         }
         .tab-btn.active {
-            color: #38bdf8;
-            border-bottom: 2px solid #38bdf8;
+            background-color: var(--button-bg);
+            color: white;
         }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        .title { font-size: 20px; font-weight: bold; text-align: center; color: #38bdf8; margin-bottom: 4px; }
-        .subtitle { font-size: 13px; text-align: center; color: #94a3b8; margin-bottom: 12px; }
-
-        /* Today Rate Banner */
-        .rate-box {
-            background: linear-gradient(135deg, #0284c7, #0369a1);
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-            margin-bottom: 14px;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        .tab-content {
+            display: none;
         }
-        .rate-title { font-size: 11px; color: #bae6fd; text-transform: uppercase; letter-spacing: 0.5px; }
-        .rate-value { font-size: 18px; font-weight: bold; color: #ffffff; margin-top: 2px; }
-        
-        .pay-info {
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 10px;
-            padding: 12px;
+        .tab-content.active {
+            display: block;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
             margin-bottom: 16px;
-            font-size: 13px;
+            border: 1px solid var(--border-color);
         }
-        .pay-title { font-weight: bold; color: #fbbf24; margin-bottom: 8px; }
-        .pay-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; color: #cbd5e1; }
-        .acc-name { font-size: 11px; color: #38bdf8; display: block; text-align: right; margin-bottom: 4px; }
-        
-        .input-group { margin-bottom: 12px; text-align: left; }
-        label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px; }
-        input[type="number"], input[type="text"], input[type="file"] {
+        .form-group {
+            margin-bottom: 14px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        input, select {
             width: 100%;
             padding: 10px 12px;
             border-radius: 8px;
-            border: 1px solid #334155;
+            border: 1px solid var(--border-color);
             background-color: #0f172a;
-            color: #fff;
+            color: white;
             box-sizing: border-box;
             font-size: 14px;
         }
-        input[type="file"] {
-            padding: 8px;
-            font-size: 12px;
-            color: #94a3b8;
-        }
-        .total-calc {
-            font-size: 12px;
-            color: #fbbf24;
-            margin-top: 4px;
-            font-weight: bold;
-        }
-        .buy-btn {
-            background-color: #0088cc;
-            color: white;
+        button.action-btn {
+            width: 100%;
+            padding: 12px;
             border: none;
-            padding: 12px;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 8px;
-        }
-        .buy-btn:disabled {
-            background-color: #334155;
-            color: #94a3b8;
-        }
-
-        #preview-img {
-            width: 100%;
-            max-height: 250px;
-            object-fit: contain;
-            margin-top: 8px;
             border-radius: 8px;
-            display: none;
-            border: 1px solid #38bdf8;
-            background-color: #0f172a;
+            background-color: var(--button-bg);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
         }
-
+        button.action-btn:hover {
+            background-color: var(--button-hover);
+        }
+        .payment-info {
+            background: #1e293b;
+            border-left: 4px solid var(--accent-color);
+            padding: 10px;
+            font-size: 13px;
+            margin-bottom: 14px;
+            border-radius: 0 8px 8px 0;
+        }
+        .preview-img {
+            max-width: 100%;
+            max-height: 150px;
+            margin-top: 10px;
+            display: none;
+            border-radius: 8px;
+        }
         .history-item {
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 10px;
+            background: #0f172a;
             padding: 12px;
+            border-radius: 8px;
             margin-bottom: 10px;
-            font-size: 12px;
+            border: 1px solid var(--border-color);
         }
         .history-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            font-weight: bold;
             margin-bottom: 6px;
-            font-weight: bold;
         }
-        .status-waiting {
-            background-color: #f59e0b;
-            color: #000;
+        .history-detail {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .status-badge {
             padding: 2px 8px;
-            border-radius: 12px;
+            border-radius: 4px;
             font-size: 11px;
+            cursor: pointer;
         }
-        .history-detail { color: #94a3b8; margin-bottom: 4px; word-break: break-all; }
-        .empty-history { text-align: center; color: #64748b; padding: 20px 0; font-size: 13px; }
-        
-        .order-count-badge {
-            font-size: 12px;
-            color: #38bdf8;
-            background-color: #0f172a;
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            margin-bottom: 12px;
+        .status-success { background: #166534; color: #4ade80; }
+        .status-waiting { background: #854d0e; color: #facc15; }
+        .empty-history {
             text-align: center;
-            font-weight: bold;
+            color: #64748b;
+            padding: 20px;
         }
     </style>
 </head>
 <body>
 
-    <div class="card">
+    <div class="container">
+        <div class="header">
+            <h2>💎 TON Buy Mini App</h2>
+            <div id="ton-price-display" class="price-badge">💎 1 TON = ဇယားဆွဲနေသည်...</div>
+        </div>
+
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('buy-tab')">💎 TON ဝယ်ယူရန်</button>
-            <button class="tab-btn" onclick="switchTab('history-tab')">📋 အော်ဒါ မှတ်တမ်း</button>
+            <button class="tab-btn active" onclick="switchTab('ton-tab')">ဝယ်ယူမည်</button>
+            <button class="tab-btn" onclick="switchTab('history-tab')">အော်ဒါမှတ်တမ်း</button>
         </div>
 
-        <div id="buy-tab" class="tab-content active">
-            <div class="title">Buy TON Crystal</div>
-            <div class="subtitle">KBZPay / Wave Pay ဖြင့် ဝယ်ယူရန်</div>
+        <!-- TON Buy Tab -->
+        <div id="ton-tab" class="tab-content active">
+            <div class="card">
+                <div class="form-group">
+                    <label>ဝယ်ယူလိုသော TON ပမာဏ</label>
+                    <input type="number" id="ton-amount" placeholder="ဥပမာ - 2" step="0.1" oninput="calculateTotal()">
+                </div>
+                <div class="form-group">
+                    <label>ကျသင့်ငွေ (MMK)</label>
+                    <input type="text" id="mmk-amount" readonly placeholder="0 MMK">
+                </div>
+                <div class="form-group">
+                    <label>သင်၏ TON Wallet Address</label>
+                    <input type="text" id="ton-wallet-address" placeholder="UQ... ဖြင့်စသော your wallet address">
+                </div>
 
-            <!-- ယနေ့ TON ဈေးနှုန်းပြသသည့်နေရာ -->
-            <div class="rate-box">
-                <div class="rate-title">📊 ယနေ့ TON ဈေးနှုန်း (1 TON)</div>
-                <div class="rate-value" id="display-rate">ရယူနေသည်...</div>
+                <div class="payment-info">
+                    <b>ငွေလွှဲရန် နံပါတ်များ:</b><br>
+                    - KPay: <span class="display-kpay">09751288906</span> (Kaung Ko Ko Thant)<br>
+                    - WavePay: <span class="display-wave">09751288906</span> (Kaung Ko Ko Thant)
+                </div>
+
+                <div class="form-group">
+                    <label>ငွေလွှဲ Tran ID (နောက်ဆုံး ၆ လုံး)</label>
+                    <input type="text" id="ton-tran-id" placeholder="ဥပမာ - 123456" maxlength="6">
+                </div>
+
+                <div class="form-group">
+                    <label>ငွေလွှဲပြေစာ (Screenshot) တင်ရန်</label>
+                    <input type="file" id="ton-receipt-file" accept="image/*" onchange="previewImage(event, 'ton-preview')">
+                    <img id="ton-preview" class="preview-img">
+                </div>
+
+                <button class="action-btn" id="ton-submit-btn" onclick="submitTonOrder()">TON အော်ဒါ တင်မည်</button>
             </div>
-
-            <div class="pay-info">
-                <div class="pay-title">📌 ငွေလွှဲရမည့် အကောင့်များ</div>
-                <div class="acc-name">( Account Name: Kaung Ko Ko Thant )</div>
-                <div class="pay-row"><span>KBZPay:</span> <strong id="display-kpay">...</strong></div>
-                <div class="pay-row"><span>Wave Pay:</span> <strong id="display-wave">...</strong></div>
-            </div>
-
-            <div class="input-group">
-                <label>ဝယ်ယူလိုသော TON ပမာဏ:</label>
-                <input type="number" id="ton-amount" placeholder="ဥပမာ - 5" step="0.1" oninput="calculateTotal()">
-                <div id="total-calc-display" class="total-calc"></div>
-            </div>
-
-            <div class="input-group">
-                <label>သင်၏ TON Wallet Address (ငွေလက်ခံမည့်လိပ်စာ):</label>
-                <input type="text" id="ton-address" placeholder="UQ... သို့မဟုတ် EQ...">
-            </div>
-
-            <div class="input-group">
-                <label>KBZPay / Wave Pay Transaction ID (နောက်ဆုံး ၆ လုံး):</label>
-                <input type="text" id="tran-id" placeholder="ဥပမာ - 123456" maxlength="10">
-            </div>
-
-            <div class="input-group">
-                <label>ငွေလွှဲပြေစာ (Receipt Photo) ထည့်ရန်:</label>
-                <input type="file" id="receipt-file" accept="image/*" onchange="previewImage(event)">
-                <img id="preview-img" alt="Receipt Preview">
-            </div>
-
-            <button type="button" class="buy-btn" id="submit-btn" onclick="submitOrder()">အော်ဒါ တင်မည်</button>
         </div>
 
+        <!-- History Tab -->
         <div id="history-tab" class="tab-content">
-            <div class="title">Order History</div>
-            <div class="subtitle" style="margin-bottom: 8px;">သင့်အော်ဒါများ၏ Status အခြေအနေ</div>
-            
-            <div id="order-count-container" class="order-count-badge">
-                📊 စုစုပေါင်း အော်ဒါ: 0 ခု
+            <div class="card">
+                <div id="order-count-container" style="font-weight: bold; margin-bottom: 12px; color: var(--accent-color);">📊 စုစုပေါင်း အော်ဒါ: (0) ခု</div>
+                <div id="history-list">
+                    <div class="empty-history">အော်ဒါ မှတ်တမ်း မရှိသေးပါခင်ဗျာ။</div>
+                </div>
             </div>
-
-            <div id="history-list"></div>
         </div>
     </div>
 
     <script>
-        // ==================== OWNER CONFIGURATION ====================
         const BOT_TOKEN = "8727961800:AAH0MwVr819OM8d0JtC8cbMTYPvM6yWLqhI"; 
-        const ADMIN_CHAT_ID = "1551804446"; 
-        const ACCOUNT_NAME = "Kaung Ko Ko Thant";
+        const ADMIN_CHAT_ID = "2009418896"; 
         const KPAY_NUMBER = "09751288906";
         const WAVEPAY_NUMBER = "09751288906";
-        // =============================================================
+        const FIREBASE_DB_URL = "https://ton-buy-bot-default-rtdb.firebaseio.com"; 
+        
+        let currentTonPriceMMK = 15500;
 
-        let currentRate = 0;
+        firebase.initializeApp({ databaseURL: FIREBASE_DB_URL });
+        const db = firebase.database();
 
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
 
-        document.getElementById('display-kpay').innerText = KPAY_NUMBER;
-        document.getElementById('display-wave').innerText = WAVEPAY_NUMBER;
+        document.querySelectorAll('.display-kpay').forEach(el => el.innerText = KPAY_NUMBER);
+        document.querySelectorAll('.display-wave').forEach(el => el.innerText = WAVEPAY_NUMBER);
 
-        // Admin မှ ပင်မ Bot ၏ Pinned Message သို့မဟုတ် Storage ဖြင့် ဈေးနှုန်း ရယူခြင်း
-        async function fetchTonRate() {
-            try {
-                // Telegram Bot Description / Storage မှ ရယူခြင်း သို့မဟုတ် Default သတ်မှတ်ခြင်း
-                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMyDescription`);
-                const data = await res.json();
-                if(data.ok && data.result.description && !isNaN(data.result.description.replace(/,/g, ''))) {
-                    currentRate = parseFloat(data.result.description.replace(/,/g, ''));
-                    document.getElementById('display-rate').innerText = currentRate.toLocaleString() + " Ks";
-                } else {
-                    document.getElementById('display-rate').innerText = "ဈေးနှုန်း မသတ်မှတ်ရသေးပါ";
-                }
-            } catch(e) {
-                document.getElementById('display-rate').innerText = "ဈေးနှုန်း စစ်မရပါ";
+        db.ref('settings/tonPrice').on('value', (snapshot) => {
+            const price = snapshot.val();
+            if (price) {
+                currentTonPriceMMK = parseFloat(price);
+            } else {
+                db.ref('settings').set({ tonPrice: 15500 });
+                currentTonPriceMMK = 15500;
             }
-        }
-        fetchTonRate();
+            document.getElementById('ton-price-display').innerText = `💎 1 TON = ${currentTonPriceMMK.toLocaleString()} MMK`;
+            calculateTotal();
+        });
 
         function calculateTotal() {
-            const amount = parseFloat(document.getElementById('ton-amount').value);
-            const calcDisplay = document.getElementById('total-calc-display');
-            if (amount && currentRate > 0) {
-                const total = amount * currentRate;
-                calcDisplay.innerText = `💰 ကျသင့်ငွေ စုစုပေါင်း: ${total.toLocaleString()} Ks`;
-            } else {
-                calcDisplay.innerText = '';
-            }
+            const amount = parseFloat(document.getElementById('ton-amount').value) || 0;
+            const totalMmk = amount * currentTonPriceMMK;
+            document.getElementById('mmk-amount').value = totalMmk > 0 ? totalMmk.toLocaleString() + " MMK" : "";
         }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            if(tabId === 'buy-tab') {
-                document.querySelectorAll('.tab-btn')[0].classList.add('active');
-            } else {
-                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            const btnMap = { 'ton-tab': 0, 'history-tab': 1 };
+            document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
+            
+            if(tabId === 'history-tab') {
                 loadOrderHistory();
             }
             document.getElementById(tabId).classList.add('active');
         }
 
-        function previewImage(event) {
+        function previewImage(event, previewId) {
             const input = event.target;
-            const preview = document.getElementById('preview-img');
+            const preview = document.getElementById(previewId);
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -301,37 +288,50 @@
             }
         }
 
-        function saveOrderToLocal(order) {
-            let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
-            orders.unshift(order);
-            localStorage.setItem('ton_orders', JSON.stringify(orders));
-        }
-
         function loadOrderHistory() {
             const historyList = document.getElementById('history-list');
             const countBadge = document.getElementById('order-count-container');
-            let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
+            const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+            const userId = user ? user.id : 'guest_user';
 
-            countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (${orders.length}) ခု`;
+            db.ref('orders/' + userId).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if(!data) {
+                    countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (0) ခု`;
+                    historyList.innerHTML = '<div class="empty-history">အော်ဒါ မှတ်တမ်း မရှိသေးပါခင်ဗျာ။</div>';
+                    return;
+                }
 
-            if(orders.length === 0) {
-                historyList.innerHTML = '<div class="empty-history">အော်ဒါ မှတ်တမ်း မရှိသေးပါခင်ဗျာ။</div>';
-                return;
-            }
+                const orders = Object.entries(data).reverse();
+                countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (${orders.length}) ခု`;
 
-            let html = '';
-            orders.forEach((ord) => {
-                html += `<div class="history-item">
-                    <div class="history-header">
-                        <span>💎 ${ord.amount} TON</span>
-                        <span class="status-waiting">⏳ Waiting</span>
-                    </div>
-                    <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
-                    <div class="history-detail">👛 Wallet: ${ord.address.substring(0, 8)}...${ord.address.substring(ord.address.length - 6)}</div>
-                    <div class="history-detail" style="font-size: 10px; color: #64748b; margin-top: 4px;">📅 ${ord.date}</div>
-                </div>`;
+                let html = '';
+                orders.forEach(([orderId, ord]) => {
+                    const isSuccess = ord.status === 'Success';
+                    const badgeClass = isSuccess ? 'status-success' : 'status-waiting';
+                    const statusText = isSuccess ? '✅ Success' : '⏳ Waiting';
+
+                    html += `<div class="history-item">
+                        <div class="history-header">
+                            <span>💎 ${ord.amount} ${ord.type}</span>
+                            <span class="status-badge ${badgeClass}" onclick="toggleOrderStatus('${userId}', '${orderId}', '${ord.status}')">${statusText} (ပြောင်းရန်)</span>
+                        </div>
+                        <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
+                        <div class="history-detail">🎯 Target: ${ord.target}</div>
+                        <div class="history-detail" style="font-size: 10px; color: #64748b; margin-top: 4px;">📅 ${ord.date}</div>
+                    </div>`;
+                });
+                historyList.innerHTML = html;
             });
-            historyList.innerHTML = html;
+        }
+
+        async function toggleOrderStatus(userId, orderId, currentStatus) {
+            const newStatus = currentStatus === 'Success' ? 'Waiting' : 'Success';
+            try {
+                await db.ref(`orders/${userId}/${orderId}`).update({ status: newStatus });
+            } catch (err) {
+                alert("Status ပြောင်းလဲရာတွင် အမှားအယွင်းရှိပါသည်");
+            }
         }
 
         function escapeHtml(text) {
@@ -344,22 +344,21 @@
                 .replace(/'/g, "&#039;");
         }
 
-        async function submitOrder() {
+        async function submitTonOrder() {
             const amount = document.getElementById('ton-amount').value;
-            const address = document.getElementById('ton-address').value.trim();
-            const tranId = document.getElementById('tran-id').value.trim();
-            const fileInput = document.getElementById('receipt-file');
-            const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+            const walletAddress = document.getElementById('ton-wallet-address').value.trim();
+            const tranId = document.getElementById('ton-tran-id').value.trim();
+            const fileInput = document.getElementById('ton-receipt-file');
+            const btn = document.getElementById('ton-submit-btn');
 
-            if(!amount || !address || !tranId) {
-                alert('ကျေးဇူးပြု၍ ပမာဏ၊ Address နှင့် Transaction ID တို့ကို ဖြည့်စွက်ပေးပါခင်ဗျာ။');
+            if(!amount || !walletAddress || !tranId) {
+                alert('ကျေးဇူးပြု၍ TON ပမာဏ၊ Wallet Address နှင့် Transaction ID တို့ကို ဖြည့်စွက်ပေးပါခင်ဗျာ။');
                 return;
             }
 
             const digitsOnly = tranId.replace(/\D/g, '');
             if (digitsOnly.length < 6) {
                 alert('⚠️ Transaction ID (နောက်ဆုံး ၆ လုံး) ကို မှန်ကန်စွာ ဂဏန်း ၆ လုံး ပြည့်အောင် ဖြည့်ပေးပါခင်ဗျာ။');
-                document.getElementById('tran-id').focus();
                 return;
             }
 
@@ -368,7 +367,6 @@
                 return;
             }
 
-            const btn = document.getElementById('submit-btn');
             btn.innerText = "ပြေစာပုံအား စစ်ဆေးနေပါသည်...";
             btn.disabled = true;
 
@@ -378,11 +376,9 @@
                 const ret = await worker.recognize(imageFile);
                 await worker.terminate();
 
-                const extractedText = ret.data.text;
-
-                if (!extractedText.includes(digitsOnly)) {
+                if (!ret.data.text.includes(digitsOnly)) {
                     alert('❌ ရိုက်ထည့်ထားသော Tran ID (' + digitsOnly + ') သည် ငွေလွှဲပြေစာ ပုံပါ နံပါတ်နှင့် မတူညီပါ။ ကျေးဇူးပြု၍ ပြန်လည်စစ်ဆေးပါ။');
-                    btn.innerText = "အော်ဒါ တင်မည်";
+                    btn.innerText = "TON အော်ဒါ တင်မည်";
                     btn.disabled = false;
                     return;
                 }
@@ -392,44 +388,43 @@
 
             btn.innerText = "ခဏစောင့်ပါ...";
 
+            const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+            const userId = user ? user.id : 'guest_user';
             const username = (user && user.username) ? "@" + escapeHtml(user.username) : "Username မရှိပါ";
             const firstName = (user && user.first_name) ? escapeHtml(user.first_name) : "Customer";
-            
-            const nanoAmount = Math.round(parseFloat(amount) * 1000000000);
-            const tonkeeperUrl = "https://app.tonkeeper.com/transfer/" + address + "?amount=" + nanoAmount;
 
-            const captionMessage = `🛒 <b>အော်ဒါအသစ် ရောက်ရှိပါသည်။</b>\n\n` +
-                                   `👤 ဝယ်ယူသူ: ${firstName} (${username})\n` +
-                                   `💎 ပမာဏ: ${amount} TON\n` +
-                                   `👛 Wallet Address:\n<code>${escapeHtml(address)}</code>\n\n` +
-                                   `🧾 Tran ID (နောက်ဆုံး၆လုံး): <code>${escapeHtml(tranId)}</code>`;
+            const orderId = "ORD_" + Date.now();
+            const nanoTon = Math.floor(parseFloat(amount) * 1000000000);
+            const tonPayUrl = `https://app.tonkeeper.com/transfer/${walletAddress}?amount=${nanoTon}`;
 
-            const replyMarkup = JSON.stringify({
-                inline_keyboard: [
-                    [{ text: "📲 Send TON via Tonkeeper", url: tonkeeperUrl }]
-                ]
-            });
-
-            const newOrder = {
+            await db.ref(`orders/${userId}/${orderId}`).set({
+                orderId: orderId,
+                userId: userId,
+                type: 'TON',
                 amount: amount,
-                address: address,
+                target: walletAddress,
                 tranId: tranId,
                 status: 'Waiting',
                 date: new Date().toLocaleString()
-            };
+            });
 
-            const handleSuccess = () => {
-                saveOrderToLocal(newOrder);
-                alert("အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ အော်ဒါ မှတ်တမ်းတွင် Status စစ်ဆေးနိုင်ပါသည်။");
-                switchTab('history-tab');
-                btn.innerText = "အော်ဒါ တင်မည်";
-                btn.disabled = false;
-            };
+            const totalMmkCalc = (parseFloat(amount) * currentTonPriceMMK).toLocaleString();
+            const caption = `💎 <b>TON Coin အော်ဒါအသစ် ရောက်ရှိပါသည်။</b>\n\n` +
+                            `👤 ဝယ်ယူသူ: ${firstName} (${username})\n` +
+                            `💎 TON ပမာဏ: ${amount} TON (ကျသင့်ငွေ: ${totalMmkCalc} MMK)\n` +
+                            `🎯 Wallet: <code>${escapeHtml(walletAddress)}</code>\n\n` +
+                            `🧾 Tran ID (နောက်ဆုံး၆လုံး): <code>${escapeHtml(tranId)}</code>`;
+
+            const replyMarkup = JSON.stringify({
+                inline_keyboard: [
+                    [{ text: "🚀 Send TON via Tonkeeper", url: tonPayUrl }]
+                ]
+            });
 
             const formData = new FormData();
             formData.append("chat_id", ADMIN_CHAT_ID);
             formData.append("photo", fileInput.files[0]);
-            formData.append("caption", captionMessage);
+            formData.append("caption", caption);
             formData.append("parse_mode", "HTML");
             formData.append("reply_markup", replyMarkup);
 
@@ -438,17 +433,21 @@
                     method: "POST",
                     body: formData
                 });
+
                 if(res.ok) {
-                    handleSuccess();
+                    alert("TON အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။");
+                    switchTab('history-tab');
+                    btn.innerText = "TON အော်ဒါ တင်မည်";
+                    btn.disabled = false;
                 } else {
                     const errData = await res.json();
                     alert("Error: " + (errData.description || "အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်"));
-                    btn.innerText = "အော်ဒါ တင်မည်";
+                    btn.innerText = "TON အော်ဒါ တင်မည်";
                     btn.disabled = false;
                 }
             } catch (err) {
                 alert("ကွန်ရက် ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါသည်။");
-                btn.innerText = "အော်ဒါ တင်မည်";
+                btn.innerText = "TON အော်ဒါ တင်မည်";
                 btn.disabled = false;
             }
         }
