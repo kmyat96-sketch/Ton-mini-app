@@ -51,7 +51,19 @@
         .tab-content.active { display: block; }
 
         .title { font-size: 20px; font-weight: bold; text-align: center; color: #38bdf8; margin-bottom: 4px; }
-        .subtitle { font-size: 13px; text-align: center; color: #94a3b8; margin-bottom: 16px; }
+        .subtitle { font-size: 13px; text-align: center; color: #94a3b8; margin-bottom: 12px; }
+
+        /* Today Rate Banner */
+        .rate-box {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+        .rate-title { font-size: 11px; color: #bae6fd; text-transform: uppercase; letter-spacing: 0.5px; }
+        .rate-value { font-size: 18px; font-weight: bold; color: #ffffff; margin-top: 2px; }
         
         .pay-info {
             background-color: #0f172a;
@@ -62,7 +74,8 @@
             font-size: 13px;
         }
         .pay-title { font-weight: bold; color: #fbbf24; margin-bottom: 8px; }
-        .pay-row { display: flex; justify-content: space-between; margin-bottom: 6px; color: #cbd5e1; }
+        .pay-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; color: #cbd5e1; }
+        .acc-name { font-size: 11px; color: #38bdf8; display: block; text-align: right; margin-bottom: 4px; }
         
         .input-group { margin-bottom: 12px; text-align: left; }
         label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px; }
@@ -80,6 +93,12 @@
             padding: 8px;
             font-size: 12px;
             color: #94a3b8;
+        }
+        .total-calc {
+            font-size: 12px;
+            color: #fbbf24;
+            margin-top: 4px;
+            font-weight: bold;
         }
         .buy-btn {
             background-color: #0088cc;
@@ -159,15 +178,23 @@
             <div class="title">Buy TON Crystal</div>
             <div class="subtitle">KBZPay / Wave Pay ဖြင့် ဝယ်ယူရန်</div>
 
+            <!-- ယနေ့ TON ဈေးနှုန်းပြသသည့်နေရာ -->
+            <div class="rate-box">
+                <div class="rate-title">📊 ယနေ့ TON ဈေးနှုန်း (1 TON)</div>
+                <div class="rate-value" id="display-rate">ရယူနေသည်...</div>
+            </div>
+
             <div class="pay-info">
                 <div class="pay-title">📌 ငွေလွှဲရမည့် အကောင့်များ</div>
+                <div class="acc-name">( Account Name: Kaung Ko Ko Thant )</div>
                 <div class="pay-row"><span>KBZPay:</span> <strong id="display-kpay">...</strong></div>
                 <div class="pay-row"><span>Wave Pay:</span> <strong id="display-wave">...</strong></div>
             </div>
 
             <div class="input-group">
                 <label>ဝယ်ယူလိုသော TON ပမာဏ:</label>
-                <input type="number" id="ton-amount" placeholder="ဥပမာ - 5" step="0.1">
+                <input type="number" id="ton-amount" placeholder="ဥပမာ - 5" step="0.1" oninput="calculateTotal()">
+                <div id="total-calc-display" class="total-calc"></div>
             </div>
 
             <div class="input-group">
@@ -204,10 +231,13 @@
     <script>
         // ==================== OWNER CONFIGURATION ====================
         const BOT_TOKEN = "8727961800:AAH0MwVr819OM8d0JtC8cbMTYPvM6yWLqhI"; 
-        const ADMIN_CHAT_ID = "2009418896"; 
+        const ADMIN_CHAT_ID = "1551804446"; 
+        const ACCOUNT_NAME = "Kaung Ko Ko Thant";
         const KPAY_NUMBER = "09751288906";
         const WAVEPAY_NUMBER = "09751288906";
         // =============================================================
+
+        let currentRate = 0;
 
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -215,6 +245,35 @@
 
         document.getElementById('display-kpay').innerText = KPAY_NUMBER;
         document.getElementById('display-wave').innerText = WAVEPAY_NUMBER;
+
+        // Admin မှ ပင်မ Bot ၏ Pinned Message သို့မဟုတ် Storage ဖြင့် ဈေးနှုန်း ရယူခြင်း
+        async function fetchTonRate() {
+            try {
+                // Telegram Bot Description / Storage မှ ရယူခြင်း သို့မဟုတ် Default သတ်မှတ်ခြင်း
+                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMyDescription`);
+                const data = await res.json();
+                if(data.ok && data.result.description && !isNaN(data.result.description.replace(/,/g, ''))) {
+                    currentRate = parseFloat(data.result.description.replace(/,/g, ''));
+                    document.getElementById('display-rate').innerText = currentRate.toLocaleString() + " Ks";
+                } else {
+                    document.getElementById('display-rate').innerText = "ဈေးနှုန်း မသတ်မှတ်ရသေးပါ";
+                }
+            } catch(e) {
+                document.getElementById('display-rate').innerText = "ဈေးနှုန်း စစ်မရပါ";
+            }
+        }
+        fetchTonRate();
+
+        function calculateTotal() {
+            const amount = parseFloat(document.getElementById('ton-amount').value);
+            const calcDisplay = document.getElementById('total-calc-display');
+            if (amount && currentRate > 0) {
+                const total = amount * currentRate;
+                calcDisplay.innerText = `💰 ကျသင့်ငွေ စုစုပေါင်း: ${total.toLocaleString()} Ks`;
+            } else {
+                calcDisplay.innerText = '';
+            }
+        }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -275,7 +334,6 @@
             historyList.innerHTML = html;
         }
 
-        // Special Characters များကြောင့် HTML Error မတက်အောင် Escape ပြုလုပ်ပေးသည့် Function
         function escapeHtml(text) {
             if (!text) return "";
             return String(text)
@@ -306,7 +364,7 @@
             }
 
             if (!fileInput.files || !fileInput.files[0]) {
-                alert('⚠️️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
+                alert('⚠️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
                 return;
             }
 
@@ -340,7 +398,6 @@
             const nanoAmount = Math.round(parseFloat(amount) * 1000000000);
             const tonkeeperUrl = "https://app.tonkeeper.com/transfer/" + address + "?amount=" + nanoAmount;
 
-            // HTML Mode သို့ ပြောင်းလဲထားသော မက်ဆေ့ချ်
             const captionMessage = `🛒 <b>အော်ဒါအသစ် ရောက်ရှိပါသည်။</b>\n\n` +
                                    `👤 ဝယ်ယူသူ: ${firstName} (${username})\n` +
                                    `💎 ပမာဏ: ${amount} TON\n` +
@@ -373,7 +430,7 @@
             formData.append("chat_id", ADMIN_CHAT_ID);
             formData.append("photo", fileInput.files[0]);
             formData.append("caption", captionMessage);
-            formData.append("parse_mode", "HTML"); // Markdown အစား HTML ပြောင်းလိုက်သည့်အတွက် Underscore (_) ကြောင့် Error မတက်တော့ပါ
+            formData.append("parse_mode", "HTML");
             formData.append("reply_markup", replyMarkup);
 
             try {
