@@ -138,6 +138,13 @@
             border-radius: 12px;
             font-size: 11px;
         }
+        .status-cancel {
+            background-color: #ef4444;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
         .history-detail { color: #94a3b8; margin-bottom: 4px; word-break: break-all; }
         .empty-history { text-align: center; color: #64748b; padding: 20px 0; font-size: 13px; }
         
@@ -209,12 +216,10 @@
     </div>
 
     <script>
-        // ==================== OWNER CONFIGURATION ====================
         const BOT_TOKEN = "8727961800:AAH0MwVr819OM8d0JtC8cbMTYPvM6yWLqhI"; 
         const ADMIN_CHAT_ID = "1551804446"; 
         const KPAY_NUMBER = "09897775612";
         const WAVEPAY_NUMBER = "09784000463";
-        // =============================================================
 
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -268,10 +273,10 @@
             }
 
             let html = '';
-            orders.forEach((ord) => {
-                const statusBadge = ord.status === 'Success' 
-                    ? '<span class="status-success">✅ Success</span>' 
-                    : '<span class="status-waiting">⏳ Waiting</span>';
+            orders.forEach((ord, index) => {
+                let statusBadge = '<span class="status-waiting">⏳ Waiting</span>';
+                if(ord.status === 'Success') statusBadge = '<span class="status-success">✅ Success</span>';
+                if(ord.status === 'Cancelled') statusBadge = '<span class="status-cancel">❌ Cancelled</span>';
 
                 html += `<div class="history-item">
                     <div class="history-header">
@@ -281,9 +286,22 @@
                     <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
                     <div class="history-detail">👛 Wallet: ${ord.address.substring(0, 8)}...${ord.address.substring(ord.address.length - 6)}</div>
                     <div class="history-detail" style="font-size: 10px; color: #64748b; margin-top: 4px;">📅 ${ord.date}</div>
+                    ${ord.status === 'Waiting' ? `<button onclick="toggleStatus(${index})" style="margin-top:6px; background:#334155; color:#38bdf8; border:none; padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">🔄 Status အခြေအနေ ပြောင်းရန်</button>` : ''}
                 </div>`;
             });
             historyList.innerHTML = html;
+        }
+
+        function toggleStatus(index) {
+            let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
+            const current = orders[index].status;
+            
+            // Waiting မှ Success/Cancelled သို့ အလှည့်ကျ ပြောင်းလဲနိုင်အောင် ပြုလုပ်ထားခြင်း
+            if(current === 'Waiting') orders[index].status = 'Cancelled';
+            else orders[index].status = 'Success';
+
+            localStorage.setItem('ton_orders', JSON.stringify(orders));
+            loadOrderHistory();
         }
 
         async function submitOrder() {
@@ -347,7 +365,6 @@
                                    "👛 Wallet Address:\n`" + address + "`\n\n" +
                                    "🧾 Tran ID (နောက်ဆုံး၆လုံး): `" + tranId + "`";
 
-            // Cancel Button တွင် User ID ပါဝင်အောင် တည်ဆောက်ထားခြင်း
             const replyMarkup = JSON.stringify({
                 inline_keyboard: [
                     [{ text: "📲 Send TON via Tonkeeper", url: tonkeeperUrl }],
