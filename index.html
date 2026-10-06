@@ -19,6 +19,8 @@
         .btn { width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; }
         .btn:hover { background: #218838; }
         .hidden { display: none; }
+        #previewContainer { margin-top: 10px; text-align: center; }
+        #imagePreview { max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid #ddd; display: none; }
     </style>
 </head>
 <body>
@@ -53,10 +55,15 @@
             <label>ငွေလွှဲ Tran ID (သို့) ဖုန်းနံပါတ်နောက်ဆုံး ၆ လုံး</label>
             <input type="text" id="tranId" placeholder="ဥပမာ - 123456">
         </div>
+        
         <div class="form-group">
             <label>ငွေလွှဲပြေစာ ပုံ (Screenshot)</label>
-            <input type="file" id="receiptImage" accept="image/*">
+            <input type="file" id="receiptImage" accept="image/*" onchange="previewFile()">
+            <div id="previewContainer">
+                <img id="imagePreview" alt="Receipt Preview">
+            </div>
         </div>
+
         <div class="form-group">
             <label>လက်ခံမည့် Wallet Address (Tonkeeper)</label>
             <input type="text" id="manualWallet" placeholder="EQ... your wallet address">
@@ -92,6 +99,24 @@
     function calculateTotal() {
         let amount = document.getElementById('tonAmount').value || 0;
         document.getElementById('totalMmk').value = (amount * currentTonPrice).toLocaleString() + " MMK";
+    }
+
+    function previewFile() {
+        const preview = document.getElementById('imagePreview');
+        const file = document.getElementById('receiptImage').files[0];
+        const reader = new FileReader();
+
+        reader.onloadend = function () {
+            preview.src = reader.result;
+            preview.style.display = 'block';
+        }
+
+        if (file) {
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
     }
 
     function switchTab(tab) {
