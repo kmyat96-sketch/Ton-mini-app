@@ -183,7 +183,7 @@
             <div class="subtitle">KBZPay / Wave Pay ဖြင့် TON ဝယ်ယူရန်</div>
 
             <div class="price-box" id="ton-price-display">
-                💎 1 TON = ခေတ္တစောင့်ပါ...
+                💎 1 TON = ဈေးနှုန်းရယူနေပါသည်...
             </div>
 
             <div class="pay-info">
@@ -243,9 +243,7 @@
         const WAVEPAY_NUMBER = "09751288906";
         const FIREBASE_DB_URL = "https://ton-buy-bot-default-rtdb.firebaseio.com"; 
         
-        // URL လင့်ခ် (ဥပမာ ?price=16000) ပါလာပါက ၎င်းကိုသုံးမည်၊ မပါပါက 15500 ကိုသုံးမည်
-        const urlParams = new URLSearchParams(window.location.search);
-        let currentTonPriceMMK = urlParams.has('price') ? parseFloat(urlParams.get('price')) : 7200;
+        let currentTonPriceMMK = 15500; // Default ဈေးနှုန်း
         // =======================================================
 
         firebase.initializeApp({ databaseURL: FIREBASE_DB_URL });
@@ -258,8 +256,17 @@
         document.querySelectorAll('.display-kpay').forEach(el => el.innerText = KPAY_NUMBER);
         document.querySelectorAll('.display-wave').forEach(el => el.innerText = WAVEPAY_NUMBER);
 
-        // ဈေးနှုန်းပြသခြင်းနှင့် တွက်ချက်ခြင်း
-        document.getElementById('ton-price-display').innerText = `💎 1 TON = ${currentTonPriceMMK.toLocaleString()} MMK`;
+        // Firebase ထဲမှ ဈေးနှုန်းကို အမြဲတမ်း Live ချိန်ကိုက်ယူမည် (Admin က /price ဖြင့် ပြောင်းလိုက်တာနဲ့ ချက်ချင်းပြောင်းမည်)
+        db.ref('settings/tonPrice').on('value', (snapshot) => {
+            const price = snapshot.val();
+            if (price) {
+                currentTonPriceMMK = parseFloat(price);
+            } else {
+                db.ref('settings').update({ tonPrice: currentTonPriceMMK });
+            }
+            document.getElementById('ton-price-display').innerText = `💎 1 TON = ${currentTonPriceMMK.toLocaleString()} MMK`;
+            calculateTotal();
+        });
 
         function calculateTotal() {
             const amount = parseFloat(document.getElementById('ton-amount').value) || 0;
