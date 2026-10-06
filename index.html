@@ -1,304 +1,254 @@
 <!DOCTYPE html>
-<html lang="my">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Buy Mini App</title>
+    <title>TON Shop Mini App</title>
+    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <!-- TON Connect UI SDK -->
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
-        :root {
-            --bg-color: #18222d;
-            --card-bg: #232e3c;
-            --text-color: #ffffff;
-            --accent-color: #2ea6ff;
-            --secondary-color: #2b3847;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 15px;
-        }
-        .container {
-            max-width: 480px;
-            margin: 0 auto;
-        }
-        /* Tabs */
-        .tabs {
-            display: flex;
-            background: var(--secondary-color);
-            border-radius: 12px;
-            padding: 5px;
-            margin-bottom: 20px;
-        }
-        .tab-btn {
-            flex: 1;
-            background: none;
-            border: none;
-            color: #8c9ba5;
-            padding: 10px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: 0.3s;
-        }
-        .tab-btn.active {
-            background: var(--accent-color);
-            color: white;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        /* Card & Form */
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            margin-bottom: 20px;
-        }
-        .price-banner {
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            background: linear-gradient(135deg, #2ea6ff, #0077cc);
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            font-size: 13px;
-            color: #a8b2bc;
-            margin-bottom: 5px;
-        }
-        input, select {
-            width: 100%;
-            padding: 12px;
-            background: var(--bg-color);
-            border: 1px solid #3b4b5e;
-            border-radius: 8px;
-            color: white;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        .payment-info {
-            background: rgba(46, 166, 255, 0.1);
-            border-left: 4px solid var(--accent-color);
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
-        .btn-primary {
-            width: 100%;
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-primary:active {
-            transform: scale(0.98);
-        }
-        /* History Item */
-        .history-item {
-            background: var(--bg-color);
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            font-size: 13px;
-            border-left: 4px solid #ffc107;
-        }
-        .history-item.success { border-left-color: #28a745; }
-        .history-item.rejected { border-left-color: #dc3545; }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 15px; color: #333; }
+        .container { max-width: 400px; margin: auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #0088cc; }
+        .tab { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .tab button { flex: 1; padding: 10px; border: none; background: #ddd; cursor: pointer; font-weight: bold; }
+        .tab button.active { background: #0088cc; color: white; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
+        #ton-connect-button { margin: 15px 0; display: flex; justify-content: center; }
+        .btn { width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: #218838; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Tabs Navigation -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('buy')">💎 TON ဝယ်ရန်</button>
-            <button class="tab-btn" onclick="switchTab('history')">📜 History</button>
+
+<div class="container">
+    <h2>💎 TON Store</h2>
+    
+    <div class="tab">
+        <button id="buyTabBtn" class="active" onclick="switchTab('buy')">ဝယ်ယူရန်</button>
+        <button id="historyTabBtn" onclick="switchTab('history')">မှတ်တမ်း</button>
+    </div>
+
+    <!-- Buy Tab -->
+    <div id="buySection">
+        <div class="form-group">
+            <label>ဝယ်ယူမည့် TON ပမာဏ</label>
+            <input type="number" id="tonAmount" value="1" min="0.1" step="0.1" oninput="calculateTotal()">
+        </div>
+        <div class="form-group">
+            <label>ကျသင့်ငွေ (MMK)</label>
+            <input type="text" id="totalMmk" readonly style="background: #e9ecef; font-weight: bold; color: #d9534f;">
         </div>
 
-        <!-- TAB 1: TON ဝယ်ရန် -->
-        <div id="buy-tab" class="tab-content active">
-            <div class="card">
-                <div class="price-banner" id="priceDisplay">1 TON = Loading...</div>
-                
-                <div class="form-group">
-                    <label>ဝယ်ယူလိုသော TON ပမာဏ</label>
-                    <input type="number" id="tonAmount" placeholder="ဥပမာ - 2" min="0.1" step="any" oninput="calculateTotal()">
-                </div>
-
-                <div class="form-group">
-                    <label>ကျသင့်ငွေ (MMK)</label>
-                    <input type="text" id="totalMmk" readonly value="0 MMK" style="color: #4cd137; font-weight: bold;">
-                </div>
-
-                <div class="form-group">
-                    <label>သင်၏ TON Wallet Address</label>
-                    <input type="text" id="walletAddress" placeholder="UQ... ဖြင့်စသော your wallet address">
-                </div>
-
-                <!-- ငွေလွှဲရန် ဖုန်းနံပါတ်များ -->
-                <div class="payment-info">
-                    <b>📌 ငွေလွှဲရန် နံပါတ်များ:</b><br>
-                    • KPay: <span id="kpayNum">09751288906</span> (Kaung Ko Ko Thant)<br>
-                    • WavePay: <span id="waveNum">09751288906</span> (Kaung Ko Ko Thant)
-                </div>
-
-                <div class="form-group">
-                    <label>ငွေလွှဲ Tran ID (နောက်ဆုံး ၆ လုံး)</label>
-                    <input type="text" id="tranId" placeholder="ဥပမာ - 123456" maxlength="6">
-                </div>
-
-                <div class="form-group">
-                    <label>ငွေလွှဲပြေစာ (Screenshot) တင်ရန်</label>
-                    <input type="file" id="receiptFile" accept="image/*">
-                </div>
-
-                <button class="btn-primary" onclick="submitOrder()">📤 TON အော်ဒါ တင်မည်</button>
-            </div>
+        <div class="form-group">
+            <label>ငွေပေးချေမည့် နည်းလမ်း</label>
+            <select id="payMethod" onchange="togglePaymentMethod()">
+                <option value="tonconnect">Tonkeeper (Auto TON Transfer)</option>
+                <option value="kpay">KPay / Wave (Manual with Screenshot)</option>
+            </select>
         </div>
 
-        <!-- TAB 2: History -->
-        <div id="history-tab" class="tab-content">
-            <div class="card">
-                <h3>ဝယ်ယူခဲ့မှု မှတ်တမ်းများ</h3>
-                <div id="historyList">မှတ်တမ်းများ ရှာမတွေ့သေးပါ...</div>
+        <!-- Tonkeeper Connect Button -->
+        <div id="tonConnectSection">
+            <div id="ton-connect-button"></div>
+            <button class="btn" onclick="buyWithTonConnect()">TON ဖြင့် ငွေပေးချေမည်</button>
+        </div>
+
+        <!-- KPay / Wave Manual Section with Screenshot -->
+        <div id="kpaySection" class="hidden">
+            <div style="font-size: 13px; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                📌 <b>ငွေလွှဲရန် အကောင့်များ:</b><br>
+                • KBZ Pay: <b>09751288906</b><br>
+                • Wave Money: <b>09751288906</b><br>
+                (ငွေလွှဲပြီးပါက ပြေစာပုံနှင့် Tran ID တင်ပေးပါ။)
             </div>
+            <div class="form-group">
+                <label>ငွေလွှဲ Tran ID (သို့) ဖုန်းနံပါတ်နောက်ဆုံး ၆ လုံး</label>
+                <input type="text" id="tranId" placeholder="ဥပမာ - 123456">
+            </div>
+            <div class="form-group">
+                <label>ငွေလွှဲပြေစာ ပုံ (Screenshot)</label>
+                <input type="file" id="receiptImage" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label>လက်ခံမည့် Wallet Address (Tonkeeper)</label>
+                <input type="text" id="manualWallet" placeholder="EQ... your wallet address">
+            </div>
+            <button class="btn" onclick="submitKPayOrder()">အော်ဒါတင်မည်</button>
         </div>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+    <!-- History Tab -->
+    <div id="historySection" class="hidden">
+        <h3>ဝယ်ယူခဲ့သည့် မှတ်တမ်းများ</h3>
+        <div id="historyList">ဒေတာများကို ရှာဖွေနေသည်...</div>
+    </div>
+</div>
 
-        // Firebase Configuration (သင့်ရဲ့ Database URL ထည့်ပါ)
-        const firebaseConfig = {
-            databaseURL: "https://ton-buy-bot-default-rtdb.firebaseio.com"
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    const FIREBASE_REST_URL = "https://ton-buy-bot-default-rtdb.firebaseio.com";
+    let currentTonPrice = 7000;
+
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+        manifestUrl: 'https://raw.githubusercontent.com/kmyat96-sketch/Ton-mini-app/main/tonconnect-manifest.json',
+        buttonRootId: 'ton-connect-button'
+    });
+
+    async function fetchPrice() {
+        try {
+            let res = await fetch(`${FIREBASE_REST_URL}/ton_price.json`);
+            let data = await res.json();
+            if (data) currentTonPrice = data;
+            calculateTotal();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function calculateTotal() {
+        let amount = document.getElementById('tonAmount').value || 0;
+        document.getElementById('totalMmk').value = (amount * currentTonPrice).toLocaleString() + " MMK";
+    }
+
+    function togglePaymentMethod() {
+        let method = document.getElementById('payMethod').value;
+        if (method === 'tonconnect') {
+            document.getElementById('tonConnectSection').classList.remove('hidden');
+            document.getElementById('kpaySection').classList.add('hidden');
+        } else {
+            document.getElementById('tonConnectSection').classList.add('hidden');
+            document.getElementById('kpaySection').classList.remove('hidden');
+        }
+    }
+
+    function switchTab(tab) {
+        if (tab === 'buy') {
+            document.getElementById('buySection').classList.remove('hidden');
+            document.getElementById('historySection').classList.add('hidden');
+            document.getElementById('buyTabBtn').classList.add('active');
+            document.getElementById('historyTabBtn').classList.remove('active');
+        } else {
+            document.getElementById('buySection').classList.add('hidden');
+            document.getElementById('historySection').classList.remove('hidden');
+            document.getElementById('historyTabBtn').classList.add('active');
+            document.getElementById('buyTabBtn').classList.remove('active');
+            loadHistory();
+        }
+    }
+
+    async function buyWithTonConnect() {
+        if (!tonConnectUI.connected) {
+            alert('ကျေးဇူးပြု၍ ပထမဦးစွာ Tonkeeper ကို ချိတ်ဆက်ပါ (Connect Wallet)');
+            return;
+        }
+        let amount = document.getElementById('tonAmount').value;
+        let nanoTon = Math.floor(amount * 1000000000).toString();
+        
+        const transaction = {
+            validUntil: Math.floor(Date.now() / 1000) + 300,
+            messages: [
+                {
+                    address: "EQAdminWalletAddressHereReplaceIt", 
+                    amount: nanoTon
+                }
+            ]
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
 
-        let currentRate = 15500; // Default price
+        try {
+            let result = await tonConnectUI.sendTransaction(transaction);
+            alert('ငွေပေးချေမှု အောင်မြင်ပါသည်။');
+            saveOrderToFirebase({
+                tonAmount: amount,
+                totalMmk: amount * currentTonPrice,
+                walletAddress: tonConnectUI.wallet.account.address,
+                tranId: result.boc,
+                status: 'approved',
+                method: 'TonConnect'
+            });
+        } catch (e) {
+            alert('ငွေပေးချေမှု ပျက်ကွက်သည် သို့မဟုတ် ပယ်ဖျက်လိုက်ပါပြီ။');
+        }
+    }
 
-        // Real-time ဈေးနှုန်းဆွဲထုတ်ခြင်း
-        db.ref('ton_price').on('value', (snapshot) => {
-            const val = snapshot.val();
-            if (val) {
-                currentRate = Number(val);
-                document.getElementById('priceDisplay').innerText = `1 TON = ${currentRate.toLocaleString()} MMK`;
-                calculateTotal();
-            }
-        });
+    async function submitKPayOrder() {
+        let amount = document.getElementById('tonAmount').value;
+        let tranId = document.getElementById('tranId').value;
+        let wallet = document.getElementById('manualWallet').value;
+        let imageFile = document.getElementById('receiptImage').files[0];
 
-        function calculateTotal() {
-            const ton = parseFloat(document.getElementById('tonAmount').value) || 0;
-            const total = ton * currentRate;
-            document.getElementById('totalMmk').value = total.toLocaleString() + " MMK";
+        if (!tranId || !wallet || !imageFile) {
+            alert('အချက်အလက်များနှင့် ငွေလွှဲပြေစာ ပုံကို အပြည့်အစုံ ဖြည့်စွက်ပါ။');
+            return;
         }
 
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        let reader = new FileReader();
+        reader.readAsDataURL(imageFile);
+        reader.onload = async function () {
+            let base64Image = reader.result;
             
-            if(tabName === 'buy') {
-                document.querySelectorAll('.tab-btn')[0].classList.add('active');
-                document.getElementById('buy-tab').classList.add('active');
-            } else {
-                document.querySelectorAll('.tab-btn')[1].classList.add('active');
-                document.getElementById('history-tab').classList.add('active');
-                loadHistory();
-            }
-        }
-
-        function submitOrder() {
-            const ton = document.getElementById('tonAmount').value;
-            const wallet = document.getElementById('walletAddress').value;
-            const tranId = document.getElementById('tranId').value;
-
-            if (!ton || !wallet || !tranId) {
-                alert('အချက်အလက်များကို အပြည့်အစုံ ဖြည့်စွက်ပေးပါ!');
-                return;
-            }
-
-            const user = tg.initDataUnsafe?.user || { id: 12345, first_name: "User", username: "unknown" };
-            const totalMmk = ton * currentRate;
-
-            const orderData = {
-                userId: user.id,
-                name: user.first_name,
-                username: user.username || 'NoUsername',
-                tonAmount: ton,
-                totalMmk: totalMmk,
+            await saveOrderToFirebase({
+                tonAmount: amount,
+                totalMmk: amount * currentTonPrice,
                 walletAddress: wallet,
                 tranId: tranId,
+                receiptImage: base64Image,
                 status: 'pending',
-                timestamp: Date.now()
-            };
-
-            // Firebase သို့ အော်ဒါပို့ခြင်း
-            db.ref('orders').push(orderData).then(() => {
-                alert('အော်ဒါတင်ခြင်း အောင်မြင်ပါသည်။ Admin အတည်ပြုချက်ကို စောင့်ဆိုင်းပေးပါ။');
-                // Bot ဆီသို့ အကြောင်းကြားချက် ပို့ရန် (သို့မဟုတ် ပြီးဆုံးကြောင်းပြရန်)
-                switchTab('history');
-            }).catch(err => {
-                alert('အမှားအယွင်းရှိသည်: ' + err.message);
+                method: 'KPay/Wave'
             });
+
+            alert('အော်ဒါတင်ခြင်း အောင်မြင်ပါသည်။ Admin အတည်ပြုသည်နှင့် TON ရောက်ရှိပါမည်။');
+            tg.close();
+        };
+    }
+
+    async function saveOrderToFirebase(orderData) {
+        orderData.userId = tg.initDataUnsafe?.user?.id || '12345';
+        orderData.name = tg.initDataUnsafe?.user?.first_name || 'User';
+        orderData.username = tg.initDataUnsafe?.user?.username || 'unknown';
+        orderData.timestamp = Date.now();
+
+        await fetch(`${FIREBASE_REST_URL}/orders.json`, {
+            method: 'POST',
+            body: JSON.stringify(orderData),
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    async function loadHistory() {
+        let userId = tg.initDataUnsafe?.user?.id || '12345';
+        let res = await fetch(`${FIREBASE_REST_URL}/orders.json`);
+        let data = await res.json();
+        let listEl = document.getElementById('historyList');
+        listEl.innerHTML = '';
+
+        if (!data) {
+            listEl.innerHTML = '<p>မှတ်တမ်း မရှိသေးပါ။</p>';
+            return;
         }
 
-        function loadHistory() {
-            const user = tg.initDataUnsafe?.user || { id: 12345 };
-            db.ref('orders').orderByChild('userId').equalTo(user.id).on('value', (snapshot) => {
-                const historyList = document.getElementById('historyList');
-                historyList.innerHTML = '';
-                
-                const val = snapshot.val();
-                if (!val) {
-                    historyList.innerHTML = 'ဝယ်ယူထားသော မှတ်တမ်း မရှိသေးပါ။';
-                    return;
-                }
+        Object.values(data).forEach(order => {
+            if (order.userId == userId) {
+                listEl.innerHTML += `
+                    <div style="background:#f8f9fa; padding:10px; margin-bottom:8px; border-radius:6px; border-left:4px solid ${order.status==='approved'?'28a745':'ffc107'}">
+                        <b>💎 ${order.tonAmount} TON</b> (${order.totalMmk.toLocaleString()} MMK)<br>
+                        Status: <b>${order.status}</b><br>
+                        <small>နည်းလမ်း: ${order.method}</small>
+                    </div>
+                `;
+            }
+        });
+    }
 
-                Object.values(val).reverse().forEach(order => {
-                    let statusText = 'စောင့်ဆိုင်းဆဲ (Pending)';
-                    let statusClass = '';
-                    if(order.status === 'approved') {
-                        statusText = 'အောင်မြင်သည် (Approved)';
-                        statusClass = 'success';
-                    } else if(order.status === 'rejected') {
-                        statusText = 'ပယ်ချခံရသည် (Rejected)';
-                        statusClass = 'rejected';
-                    }
+    fetchPrice();
+</script>
 
-                    const div = document.createElement('div');
-                    div.className = `history-item ${statusClass}`;
-                    div.innerHTML = `
-                        <b>💎 ပမာဏ:</b> ${order.tonAmount} TON (${order.totalMmk.toLocaleString()} MMK)<br>
-                        <b>📌 Tran ID:</b> ${order.tranId}<br>
-                        <b>🔹 အခြေအနေ:</b> ${statusText}
-                    `;
-                    historyList.appendChild(div);
-                });
-            });
-        }
-    </script>
 </body>
 </html>
