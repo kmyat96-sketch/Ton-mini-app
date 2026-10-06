@@ -106,7 +106,6 @@
             border: 1px solid #334155;
         }
 
-        /* Order History Styles */
         .history-item {
             background-color: #0f172a;
             border: 1px solid #334155;
@@ -143,21 +142,19 @@
 <body>
 
     <div class="card">
-        <!-- Navigation Tabs -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('buy-tab')">💎 TON ဝယ်ယူရန်</button>
             <button class="tab-btn" onclick="switchTab('history-tab')">📋 အော်ဒါ မှတ်တမ်း</button>
         </div>
 
-        <!-- Tab 1: Buy Form -->
         <div id="buy-tab" class="tab-content active">
             <div class="title">Buy TON Crystal</div>
             <div class="subtitle">KBZPay / Wave Pay ဖြင့် ဝယ်ယူရန်</div>
 
             <div class="pay-info">
                 <div class="pay-title">📌 ငွေလွှဲရမည့် အကောင့်များ</div>
-                <div class="pay-row"><span>KBZPay:</span> <strong>09897775612</strong></div>
-                <div class="pay-row"><span>Wave Pay:</span> <strong>09784000463</strong></div>
+                <div class="pay-row"><span>KBZPay:</span> <strong id="display-kpay">...</strong></div>
+                <div class="pay-row"><span>Wave Pay:</span> <strong id="display-wave">...</strong></div>
             </div>
 
             <div class="input-group">
@@ -184,7 +181,6 @@
             <button type="button" class="buy-btn" id="submit-btn" onclick="submitOrder()">အော်ဒါ တင်မည်</button>
         </div>
 
-        <!-- Tab 2: Order History -->
         <div id="history-tab" class="tab-content">
             <div class="title">Order History</div>
             <div class="subtitle" style="margin-bottom: 12px;">သင့်အော်ဒါများ၏ Status အခြေအနေ</div>
@@ -193,12 +189,19 @@
     </div>
 
     <script>
+        // ==================== OWNER CONFIGURATION ====================
+        const BOT_TOKEN = "8727961800:AAH0MwVr819OM8d0JtC8cbMTYPvM6yWLqhI"; 
+        const ADMIN_CHAT_ID = "1551804446"; 
+        const KPAY_NUMBER = "09897775612";
+        const WAVEPAY_NUMBER = "09784000463";
+        // =============================================================
+
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
 
-        const BOT_TOKEN = "8727961800:AAH0MwVr819OM8d0JtC8cbMTYPvM6yWLqhI"; 
-        const ADMIN_CHAT_ID = "1551804446"; 
+        document.getElementById('display-kpay').innerText = KPAY_NUMBER;
+        document.getElementById('display-wave').innerText = WAVEPAY_NUMBER;
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -228,7 +231,7 @@
 
         function saveOrderToLocal(order) {
             let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
-            orders.unshift(order); // Add to beginning
+            orders.unshift(order);
             localStorage.setItem('ton_orders', JSON.stringify(orders));
         }
 
@@ -263,7 +266,6 @@
 
         function checkStatus(index) {
             let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
-            // စစ်ဆေးပြီးပါက Success အဖြစ် ပြောင်းပေးရန် Demo Toggle
             orders[index].status = 'Success';
             localStorage.setItem('ton_orders', JSON.stringify(orders));
             loadOrderHistory();
@@ -277,8 +279,23 @@
             const fileInput = document.getElementById('receipt-file');
             const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
 
+            // ၁။ အချက်အလက် ကွက်လပ် မကျန်အောင် စစ်ဆေးခြင်း
             if(!amount || !address || !tranId) {
                 alert('ကျေးဇူးပြု၍ ပမာဏ၊ Address နှင့် Transaction ID တို့ကို ဖြည့်စွက်ပေးပါခင်ဗျာ။');
+                return;
+            }
+
+            // ၂။ Transaction ID နောက်ဆုံး ၆ လုံး ကိန်းဂဏန်း အတိအကျ ပါ မပါ စစ်ဆေးခြင်း
+            const digitsOnly = tranId.replace(/\D/g, '');
+            if (digitsOnly.length < 6) {
+                alert('⚠️ Transaction ID (နောက်ဆုံး ၆ လုံး) ကို မှန်ကန်စွာ ဂဏန်း ၆ လုံး ပြည့်အောင် ဖြည့်ပေးပါခင်ဗျာ။');
+                document.getElementById('tran-id').focus();
+                return;
+            }
+
+            // ၃။ ငွေလွှဲပြေစာ ပုံပါမပါ စစ်ဆေးခြင်း (ပြေစာပုံ မပါရင် ရှေ့ဆက်မရပါ)
+            if (!fileInput.files || !fileInput.files[0]) {
+                alert('⚠️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
                 return;
             }
 
@@ -320,54 +337,29 @@
                 btn.disabled = false;
             };
 
-            if (fileInput.files && fileInput.files[0]) {
-                const formData = new FormData();
-                formData.append("chat_id", ADMIN_CHAT_ID);
-                formData.append("photo", fileInput.files[0]);
-                formData.append("caption", captionMessage);
-                formData.append("parse_mode", "Markdown");
-                formData.append("reply_markup", replyMarkup);
+            const formData = new FormData();
+            formData.append("chat_id", ADMIN_CHAT_ID);
+            formData.append("photo", fileInput.files[0]);
+            formData.append("caption", captionMessage);
+            formData.append("parse_mode", "Markdown");
+            formData.append("reply_markup", replyMarkup);
 
-                try {
-                    const res = await fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendPhoto", {
-                        method: "POST",
-                        body: formData
-                    });
-                    if(res.ok) {
-                        handleSuccess();
-                    } else {
-                        alert("အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်။");
-                        btn.innerText = "အော်ဒါ တင်မည်";
-                        btn.disabled = false;
-                    }
-                } catch (err) {
-                    alert("ကွန်ရက် ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါသည်။");
+            try {
+                const res = await fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendPhoto", {
+                    method: "POST",
+                    body: formData
+                });
+                if(res.ok) {
+                    handleSuccess();
+                } else {
+                    alert("အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်။");
                     btn.innerText = "အော်ဒါ တင်မည်";
                     btn.disabled = false;
                 }
-            } else {
-                const xhr = new XMLHttpRequest();
-                xhr.open("POST", "https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage", true);
-                xhr.setRequestHeader("Content-Type", "application/json");
-
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status === 200) {
-                            handleSuccess();
-                        } else {
-                            alert("အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်။");
-                            btn.innerText = "အော်ဒါ တင်မည်";
-                            btn.disabled = false;
-                        }
-                    }
-                };
-
-                xhr.send(JSON.stringify({
-                    chat_id: ADMIN_CHAT_ID,
-                    text: captionMessage,
-                    parse_mode: 'Markdown',
-                    reply_markup: JSON.parse(replyMarkup)
-                }));
+            } catch (err) {
+                alert("ကွန်ရက် ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါသည်။");
+                btn.innerText = "အော်ဒါ တင်မည်";
+                btn.disabled = false;
             }
         }
     </script>
