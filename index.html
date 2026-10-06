@@ -243,8 +243,9 @@
         const WAVEPAY_NUMBER = "09751288906";
         const FIREBASE_DB_URL = "https://ton-buy-bot-default-rtdb.firebaseio.com"; 
         
-        // 💎 ဤနေရာတွင် TON ဈေးနှုန်းကို မိမိလိုသလို အလွယ်တကူ တိုက်ရိုက် ပြင်ဆင်နိုင်ပါသည်
-        let currentTonPriceMMK = 15500; 
+        // URL လင့်ခ် (ဥပမာ ?price=16000) ပါလာပါက ၎င်းကိုသုံးမည်၊ မပါပါက 15500 ကိုသုံးမည်
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentTonPriceMMK = urlParams.has('price') ? parseFloat(urlParams.get('price')) : 15500;
         // =======================================================
 
         firebase.initializeApp({ databaseURL: FIREBASE_DB_URL });
@@ -367,7 +368,7 @@
             }
 
             if (!fileInput.files || !fileInput.files[0]) {
-                alert('⚠️️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
+                alert('⚠️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
                 return;
             }
 
@@ -401,7 +402,6 @@
             const nanoTon = Math.floor(parseFloat(amount) * 1000000000);
             const tonPayUrl = `https://app.tonkeeper.com/transfer/${walletAddress}?amount=${nanoTon}`;
 
-            // အော်ဒါအသစ်တင်တိုင်း Waiting ဖြင့် သိမ်းဆည်းမည်
             await db.ref(`orders/${userId}/${orderId}`).set({
                 orderId: orderId,
                 userId: userId,
