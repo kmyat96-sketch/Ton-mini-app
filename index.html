@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buy TON & Telegram Stars</title>
+    <title>Buy TON Coin</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
@@ -39,7 +39,7 @@
             border: none;
             color: #94a3b8;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 14px;
             cursor: pointer;
             border-bottom: 2px solid transparent;
         }
@@ -151,10 +151,9 @@
 <body>
 
     <div class="card">
-        <!-- Tabs 3 ခု -->
+        <!-- Tabs 2 ခု -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('ton-tab')">💎 Buy TON</button>
-            <button class="tab-btn" onclick="switchTab('star-tab')">⭐ Buy Stars</button>
             <button class="tab-btn" onclick="switchTab('history-tab')">📋 မှတ်တမ်း</button>
         </div>
 
@@ -194,43 +193,7 @@
             <button type="button" class="buy-btn" id="ton-submit-btn" onclick="submitTonOrder()">TON အော်ဒါ တင်မည်</button>
         </div>
 
-        <!-- 2. Telegram Stars Buy Tab -->
-        <div id="star-tab" class="tab-content">
-            <div class="title">Buy Telegram Stars</div>
-            <div class="subtitle">KBZPay / Wave Pay ဖြင့် Stars ဝယ်ယူရန်</div>
-
-            <div class="pay-info">
-                <div class="pay-title">📌 ငွေလွှဲရမည့် အကောင့်များ</div>
-                <div class="acc-name">( Account Name: Kaung Ko Ko Thant )</div>
-                <div class="pay-row"><span>KBZPay:</span> <strong class="display-kpay">...</strong></div>
-                <div class="pay-row"><span>Wave Pay:</span> <strong class="display-wave">...</strong></div>
-            </div>
-
-            <div class="input-group">
-                <label>ဝယ်ယူလိုသော Stars ပမာဏ (ဥပမာ - 50, 100):</label>
-                <input type="number" id="star-amount" placeholder="ဥပမာ - 50">
-            </div>
-
-            <div class="input-group">
-                <label>Stars ဖြည့်သွင်းမည့် Telegram Username:</label>
-                <input type="text" id="star-target-username" placeholder="ဥပမာ - @username">
-            </div>
-
-            <div class="input-group">
-                <label>KBZPay / Wave Pay Transaction ID (နောက်ဆုံး ၆ လုံး):</label>
-                <input type="text" id="star-tran-id" placeholder="ဥပမာ - 123456" maxlength="10">
-            </div>
-
-            <div class="input-group">
-                <label>ငွေလွှဲပြေစာ (Receipt Photo) ထည့်ရန်:</label>
-                <input type="file" id="star-receipt-file" accept="image/*" onchange="previewImage(event, 'star-preview-img')">
-                <img id="star-preview-img" class="preview-img" alt="Receipt Preview">
-            </div>
-
-            <button type="button" class="buy-btn" id="star-submit-btn" onclick="submitStarOrder()">Stars အော်ဒါ တင်မည်</button>
-        </div>
-
-        <!-- 3. History Tab -->
+        <!-- 2. History Tab -->
         <div id="history-tab" class="tab-content">
             <div class="title">Order History</div>
             <div class="subtitle" style="margin-bottom: 8px;">သင့်အော်ဒါများ၏ Status အခြေအနေ</div>
@@ -262,7 +225,7 @@
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            const btnMap = { 'ton-tab': 0, 'star-tab': 1, 'history-tab': 2 };
+            const btnMap = { 'ton-tab': 0, 'history-tab': 1 };
             document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
             
             if(tabId === 'history-tab') {
@@ -304,10 +267,9 @@
 
             let html = '';
             orders.forEach((ord) => {
-                const icon = ord.type === 'TON' ? '💎' : '⭐';
                 html += `<div class="history-item">
                     <div class="history-header">
-                        <span>${icon} ${ord.amount} ${ord.type}</span>
+                        <span>💎 ${ord.amount} ${ord.type}</span>
                         <span class="status-waiting">⏳ Waiting</span>
                     </div>
                     <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
@@ -328,7 +290,7 @@
                 .replace(/'/g, "&#039;");
         }
 
-        // 1. Submit TON Order
+        // Submit TON Order
         async function submitTonOrder() {
             const amount = document.getElementById('ton-amount').value;
             const walletAddress = document.getElementById('ton-wallet-address').value.trim();
@@ -377,9 +339,8 @@
             const username = (user && user.username) ? "@" + escapeHtml(user.username) : "Username မရှိပါ";
             const firstName = (user && user.first_name) ? escapeHtml(user.first_name) : "Customer";
 
-            // TON Transfer Deep Link for Tonkeeper / TON Wallets
             const nanoTon = Math.floor(parseFloat(amount) * 1000000000);
-            const tonPayUrl = `ton://transfer/${walletAddress}?amount=${nanoTon}`;
+            const tonPayUrl = `https://app.tonkeeper.com/transfer/${walletAddress}?amount=${nanoTon}`;
 
             const caption = `💎 <b>TON Coin အော်ဒါအသစ် ရောက်ရှိပါသည်။</b>\n\n` +
                             `👤 ဝယ်ယူသူ: ${firstName} (${username})\n` +
@@ -388,7 +349,7 @@
                             `🧾 Tran ID (နောက်ဆုံး၆လုံး): <code>${escapeHtml(tranId)}</code>`;
 
             const replyMarkup = JSON.stringify({
-                inline_keyboard: [[{ text: "🚀 Send TON via Wallet App", url: tonPayUrl }]]
+                inline_keyboard: [[{ text: "🚀 Send TON via Tonkeeper", url: tonPayUrl }]]
             });
 
             const formData = new FormData();
@@ -426,107 +387,6 @@
             } catch (err) {
                 alert("ကွန်ရက် ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါသည်။");
                 btn.innerText = "TON အော်ဒါ တင်မည်";
-                btn.disabled = false;
-            }
-        }
-
-        // 2. Submit Stars Order
-        async function submitStarOrder() {
-            const amount = document.getElementById('star-amount').value;
-            const targetUsername = document.getElementById('star-target-username').value.trim();
-            const tranId = document.getElementById('star-tran-id').value.trim();
-            const fileInput = document.getElementById('star-receipt-file');
-            const btn = document.getElementById('star-submit-btn');
-
-            if(!amount || !targetUsername || !tranId) {
-                alert('ကျေးဇူးပြု၍ Stars ပမာဏ၊ Telegram Username နှင့် Transaction ID တို့ကို ဖြည့်စွက်ပေးပါခင်ဗျာ။');
-                return;
-            }
-
-            const digitsOnly = tranId.replace(/\D/g, '');
-            if (digitsOnly.length < 6) {
-                alert('⚠️ Transaction ID (နောက်ဆုံး ၆ လုံး) ကို မှန်ကန်စွာ ဂဏန်း ၆ လုံး ပြည့်အောင် ဖြည့်ပေးပါခင်ဗျာ။');
-                return;
-            }
-
-            if (!fileInput.files || !fileInput.files[0]) {
-                alert('⚠️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
-                return;
-            }
-
-            btn.innerText = "ပြေစာပုံအား စစ်ဆေးနေပါသည်...";
-            btn.disabled = true;
-
-            try {
-                const imageFile = fileInput.files[0];
-                const worker = await Tesseract.createWorker('eng');
-                const ret = await worker.recognize(imageFile);
-                await worker.terminate();
-
-                if (!ret.data.text.includes(digitsOnly)) {
-                    alert('❌ ရိုက်ထည့်ထားသော Tran ID (' + digitsOnly + ') သည် ငွေလွှဲပြေစာ ပုံပါ နံပါတ်နှင့် မတူညီပါ။ ကျေးဇူးပြု၍ ပြန်လည်စစ်ဆေးပါ။');
-                    btn.innerText = "Stars အော်ဒါ တင်မည်";
-                    btn.disabled = false;
-                    return;
-                }
-            } catch (err) {
-                console.log("OCR Error:", err);
-            }
-
-            btn.innerText = "ခဏစောင့်ပါ...";
-
-            const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
-            const username = (user && user.username) ? "@" + escapeHtml(user.username) : "Username မရှိပါ";
-            const firstName = (user && user.first_name) ? escapeHtml(user.first_name) : "Customer";
-
-            const cleanUser = targetUsername.replace(/^@/, '');
-            const fragmentUrl = `https://fragment.com/stars/buy?recipient=${cleanUser}&quantity=${amount}`;
-
-            const caption = `⭐ <b>Telegram Stars အော်ဒါအသစ် ရောက်ရှိပါသည်။</b>\n\n` +
-                            `👤 ဝယ်ယူသူ: ${firstName} (${username})\n` +
-                            `⭐ Stars ပမာဏ: ${amount} Stars\n` +
-                            `🎯 လက်ခံမည့် Username: <b>${escapeHtml(targetUsername)}</b>\n\n` +
-                            `🧾 Tran ID (နောက်ဆုံး၆လုံး): <code>${escapeHtml(tranId)}</code>`;
-
-            const replyMarkup = JSON.stringify({
-                inline_keyboard: [[{ text: "🎁 Send Stars via Fragment (TON)", url: fragmentUrl }]]
-            });
-
-            const formData = new FormData();
-            formData.append("chat_id", ADMIN_CHAT_ID);
-            formData.append("photo", fileInput.files[0]);
-            formData.append("caption", caption);
-            formData.append("parse_mode", "HTML");
-            formData.append("reply_markup", replyMarkup);
-
-            try {
-                const res = await fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendPhoto", {
-                    method: "POST",
-                    body: formData
-                });
-
-                if(res.ok) {
-                    saveOrderToLocal({
-                        type: 'Stars',
-                        amount: amount,
-                        target: targetUsername,
-                        tranId: tranId,
-                        status: 'Waiting',
-                        date: new Date().toLocaleString()
-                    });
-                    alert("အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ Admin မှ စစ်ဆေးပြီး Stars ထည့်သွင်းပေးပါလိမ့်မည်။");
-                    switchTab('history-tab');
-                    btn.innerText = "Stars အော်ဒါ တင်မည်";
-                    btn.disabled = false;
-                } else {
-                    const errData = await res.json();
-                    alert("Error: " + (errData.description || "အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်"));
-                    btn.innerText = "Stars အော်ဒါ တင်မည်";
-                    btn.disabled = false;
-                }
-            } catch (err) {
-                alert("ကွန်ရက် ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါသည်။");
-                btn.innerText = "Stars အော်ဒါ တင်မည်";
                 btn.disabled = false;
             }
         }
