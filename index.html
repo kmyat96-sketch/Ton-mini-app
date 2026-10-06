@@ -125,12 +125,13 @@
             margin-bottom: 6px;
             font-weight: bold;
         }
-        .status-waiting {
-            background-color: #f59e0b;
-            color: #000;
+        .status-success {
+            background-color: #10b981;
+            color: #ffffff;
             padding: 2px 8px;
             border-radius: 12px;
             font-size: 11px;
+            font-weight: bold;
         }
         .history-detail { color: #94a3b8; margin-bottom: 4px; word-break: break-all; }
         .empty-history { text-align: center; color: #64748b; padding: 20px 0; font-size: 13px; }
@@ -151,7 +152,7 @@
 <body>
 
     <div class="card">
-        <!-- Tabs 2 ခုသာ ပါဝင်မည် (Buy Stars ဖြုတ်ထားပါသည်) -->
+        <!-- Tabs 2 ခု -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('ton-tab')">💎 Buy TON</button>
             <button class="tab-btn" onclick="switchTab('history-tab')">📋 မှတ်တမ်း</button>
@@ -270,7 +271,7 @@
                 html += `<div class="history-item">
                     <div class="history-header">
                         <span>💎 ${ord.amount} ${ord.type}</span>
-                        <span class="status-waiting">⏳ Waiting</span>
+                        <span class="status-success">✅ Success</span>
                     </div>
                     <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
                     <div class="history-detail">🎯 Target: ${ord.target}</div>
@@ -371,7 +372,7 @@
                         amount: amount,
                         target: walletAddress,
                         tranId: tranId,
-                        status: 'Waiting',
+                        status: 'Success',
                         date: new Date().toLocaleString()
                     });
                     alert("TON အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ Admin မှ စစ်ဆေးပြီး TON Transfer လုပ်ပေးပါလိမ့်မည်။");
