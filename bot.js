@@ -1,17 +1,40 @@
 const TelegramBot = require('node-telegram-bot-api');
-const admin = require('firebase-admin');
-
-// Firebase Admin Setup (သင့်ရဲ့ Firebase Database URL ထည့်ပါ)
-admin.initializeApp({
-  credential: admin.credential.applicationDefault(), // သို့မဟုတ် serviceAccount key ထည့်နိုင်သည်
-  databaseURL: "https://ton-buy-bot-default-rtdb.firebaseio.com"
-});
-const db = admin.database();
+const https = require('https');
 
 const token = '8727961800:AAH0MwVr819OM8d0JtC8cbMTYPvM6yWLqhI';
 const ADMIN_CHAT_ID = '2009418896';
+const FIREBASE_URL = 'https://ton-buy-bot-default-rtdb.firebaseio.com';
 
 const bot = new TelegramBot(token, { polling: true });
+
+// Helper function for Firebase REST API requests
+function firebaseRequest(path, method = 'GET', data = null) {
+    return new Promise((resolve, reject) => {
+        const urlObj = new URL(`${FIREBASE_URL}/${path}.json`);
+        const options = {
+            hostname: urlObj.hostname,
+            path: urlObj.pathname + urlObj.search,
+            method: method,
+            headers: { 'Content-Type': 'application/json' }
+        };
+
+        const req = https.request(options, (res) => {
+            let body = '';
+            res.on('data', chunk => body += chunk);
+            res.on('end', () => {
+                try {
+                    resolve(JSON.parse(body));
+                } catch (e) {
+                    resolve(body);
+                }
+            });
+        });
+
+        req.on('error', err => reject(err));
+        if (data) req.write(JSON.stringify(data));
+        req.end();
+    });
+}
 
 // 💎 /price နှုန်းထားပြောင်းရန် Command
 bot.onText(/\/price (.+)/, async (msg, match) => {
@@ -29,41 +52,53 @@ bot.onText(/\/price (.+)/, async (msg, match) => {
         return;
     }
 
-    await db.ref('ton_price').set(Number(newPrice));
+    await firebaseRequest('ton_price', 'PUT', Number(newPrice));
     bot.sendMessage(chatId, `✅ TON ဈေးနှုန်းအသစ်ကို **${Number(newPrice).toLocaleString()} MMK** သို့ ပြောင်းလဲပြီးပါပြီ။`, { parse_mode: 'Markdown' });
 });
 
-// အော်ဒါအသစ်များကို Firebase မှ စောင့်ကြည့်ပြီး Admin ဆီသို့ ပို့ရန်
-db.ref('orders').on('child_added', (snapshot) => {
-    const order = snapshot.val();
-    const orderKey = snapshot.key;
+// မူလအော်ဒါများကို စစ်ဆေးရန် စနစ် (Polling orders for admin)
+let lastProcessedOrderTime = Date.now();
 
-    if (order && order.status === 'pending') {
-        const message = `🔔 **TON ဝယ်ယူမှုအသစ် ရောက်ရှိပါသည်**\n\n` +
-                        `👤 ဝယ်ယူသူ: ${order.name} (@${order.username})\n` +
-                        `💎 ပမာဏ: ${order.tonAmount} TON\n` +
-                        `💵 ကျသင့်ငွေ: ${order.totalMmk.toLocaleString()} MMK\n` +
-                        `📬 Wallet: \`${order.walletAddress}\`\n` +
-                        `🔢 Tran ID: \`${order.tranId}\``;
+setInterval(async () => {
+    try {
+        const orders = await firebaseRequest('orders', 'GET');
+        if (!orders) return;
 
-        // 1-Click Approved လုပ်ရန် Inline Keyboard ခလုတ်
-        const opts = {
-            parse_mode: 'Markdown',
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        { text: '✅ 1-Click အတည်ပြုမည် (Approve)', callback_data: `approve_${orderKey}_${order.userId}` },
-                        { text: '❌ ပယ်ဖျက်မည် (Reject)', callback_data: `reject_${orderKey}` }
-                    ]
-                ]
+        Object.entries(orders).forEach(([orderKey, order]) => {
+            if (order && order.status === 'pending' && !order.notified) {
+                // Mark as notified in memory to prevent duplicate alerts
+                order.notified = true;
+
+                const message = `🔔 **TON ဝယ်ယူမှုအသစ် ရောက်ရှိပါသည်**\n\n` +
+                                `👤 ဝယ်ယူသူ: ${order.name} (@${order.username})\n` +
+                                `💎 ပမာဏ: ${order.tonAmount} TON\n` +
+                                `💵 ကျသင့်ငွေ: ${order.totalMmk.toLocaleString()} MMK\n` +
+                                `📬 Wallet: \`${order.walletAddress}\`\n` +
+                                `🔢 Tran ID: \`${order.tranId}\``;
+
+                const opts = {
+                    parse_mode: 'Markdown',
+                    reply_markup: {
+                        inline_keyboard: [
+                            [
+                                { text: '✅ 1-Click အတည်ပြုမည်', callback_data: `approve_${orderKey}_${order.userId}` },
+                                { text: '❌ ပယ်ဖျက်မည်', callback_data: `reject_${orderKey}` }
+                            ]
+                        ]
+                    }
+                };
+
+                bot.sendMessage(ADMIN_CHAT_ID, message, opts);
+                // Update order to indicate admin was notified
+                firebaseRequest(`orders/${orderKey}/notified`, 'PUT', true);
             }
-        };
-
-        bot.sendMessage(ADMIN_CHAT_ID, message, opts);
+        });
+    } catch (err) {
+        console.error("Error checking orders:", err);
     }
-});
+}, 5000);
 
-// Admin က ခလုတ်နှိပ်မှုကို စစ်ဆေးခြင်း (1 Click Action)
+// Admin က ခလုတ်နှိပ်မှုကို စစ်ဆေးခြင်း
 bot.on('callback_query', async (callbackQuery) => {
     const msg = callbackQuery.message;
     const data = callbackQuery.data;
@@ -80,22 +115,19 @@ bot.on('callback_query', async (callbackQuery) => {
     const buyerUserId = parts[2];
 
     if (action === 'approve') {
-        // Firebase တွင် status ကို approved သို့ပြောင်းရန်
-        await db.ref(`orders/${orderKey}`).update({ status: 'approved' });
+        await firebaseRequest(`orders/${orderKey}/status`, 'PUT', 'approved');
 
-        // Admin ဆီက မက်ဆေ့ကို အပ်ဒိတ်လုပ်ရန်
         bot.editMessageText(`${msg.text}\n\n✅ **အခြေအနေ:** အတည်ပြုပြီးစီးပါပြီ (Approved)`, {
             chat_id: msg.chat.id,
             message_id: msg.message_id,
             parse_mode: 'Markdown'
         });
 
-        // ဝယ်ယူသူ (Buyer) ဆီသို့ ချက်ချင်း အကြောင်းကြားစာပို့ရန်
         bot.sendMessage(buyerUserId, `🎉 သင်ဝယ်ယူထားသော TON များကို စစ်ဆေးအတည်ပြုပြီး ပေးပို့လိုက်ပါပြီ။ ကျေးဇူးတင်ပါသည်။ 🙏`);
         bot.answerCallbackQuery(callbackQuery.id, { text: "အောင်မြင်စွာ အတည်ပြုပြီးပါပြီ။" });
 
     } else if (action === 'reject') {
-        await db.ref(`orders/${orderKey}`).update({ status: 'rejected' });
+        await firebaseRequest(`orders/${orderKey}/status`, 'PUT', 'rejected');
 
         bot.editMessageText(`${msg.text}\n\n❌ **အခြေအနေ:** ပယ်ချခံရပါသည် (Rejected)`, {
             chat_id: msg.chat.id,
