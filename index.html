@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buy TON Crystal</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- OCR Library (ဓာတ်ပုံထဲမှ စာသား/ဂဏန်းများ ဖတ်ရှုသည့် စနစ်) -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body {
@@ -98,14 +97,16 @@
             background-color: #334155;
             color: #94a3b8;
         }
+
         #preview-img {
             width: 100%;
-            max-height: 120px;
+            max-height: 250px;
             object-fit: contain;
             margin-top: 8px;
-            border-radius: 6px;
+            border-radius: 8px;
             display: none;
-            border: 1px solid #334155;
+            border: 1px solid #38bdf8;
+            background-color: #0f172a;
         }
 
         .history-item {
@@ -139,6 +140,18 @@
         }
         .history-detail { color: #94a3b8; margin-bottom: 4px; word-break: break-all; }
         .empty-history { text-align: center; color: #64748b; padding: 20px 0; font-size: 13px; }
+        
+        .order-count-badge {
+            font-size: 12px;
+            color: #38bdf8;
+            background-color: #0f172a;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            margin-bottom: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -185,7 +198,12 @@
 
         <div id="history-tab" class="tab-content">
             <div class="title">Order History</div>
-            <div class="subtitle" style="margin-bottom: 12px;">သင့်အော်ဒါများ၏ Status အခြေအနေ</div>
+            <div class="subtitle" style="margin-bottom: 8px;">သင့်အော်ဒါများ၏ Status အခြေအနေ</div>
+            
+            <div id="order-count-container" class="order-count-badge">
+                📊 စုစုပေါင်း အော်ဒါ: 0 ခု
+            </div>
+
             <div id="history-list"></div>
         </div>
     </div>
@@ -239,7 +257,10 @@
 
         function loadOrderHistory() {
             const historyList = document.getElementById('history-list');
+            const countBadge = document.getElementById('order-count-container');
             let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
+
+            countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (${orders.length}) ခု`;
 
             if(orders.length === 0) {
                 historyList.innerHTML = '<div class="empty-history">အော်ဒါ မှတ်တမ်း မရှိသေးပါခင်ဗျာ။</div>';
@@ -247,7 +268,7 @@
             }
 
             let html = '';
-            orders.forEach((ord, index) => {
+            orders.forEach((ord) => {
                 const statusBadge = ord.status === 'Success' 
                     ? '<span class="status-success">✅ Success</span>' 
                     : '<span class="status-waiting">⏳ Waiting</span>';
@@ -260,18 +281,9 @@
                     <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
                     <div class="history-detail">👛 Wallet: ${ord.address.substring(0, 8)}...${ord.address.substring(ord.address.length - 6)}</div>
                     <div class="history-detail" style="font-size: 10px; color: #64748b; margin-top: 4px;">📅 ${ord.date}</div>
-                    ${ord.status === 'Waiting' ? `<button onclick="checkStatus(${index})" style="margin-top:6px; background:#334155; color:#38bdf8; border:none; padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">🔄 Status အခြေအနေ စစ်ဆေးမည်</button>` : ''}
                 </div>`;
             });
             historyList.innerHTML = html;
-        }
-
-        function checkStatus(index) {
-            let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
-            orders[index].status = 'Success';
-            localStorage.setItem('ton_orders', JSON.stringify(orders));
-            loadOrderHistory();
-            alert('အော်ဒါ အခြေအနေကို စစ်ဆေးပြီးပါပြီ။');
         }
 
         async function submitOrder() {
@@ -281,13 +293,11 @@
             const fileInput = document.getElementById('receipt-file');
             const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
 
-            // ၁။ အချက်အလက် ကွက်လပ် မကျန်အောင် စစ်ဆေးခြင်း
             if(!amount || !address || !tranId) {
                 alert('ကျေးဇူးပြု၍ ပမာဏ၊ Address နှင့် Transaction ID တို့ကို ဖြည့်စွက်ပေးပါခင်ဗျာ။');
                 return;
             }
 
-            // ၂။ Transaction ID ဂဏန်း ၆ လုံး စစ်ဆေးခြင်း
             const digitsOnly = tranId.replace(/\D/g, '');
             if (digitsOnly.length < 6) {
                 alert('⚠️ Transaction ID (နောက်ဆုံး ၆ လုံး) ကို မှန်ကန်စွာ ဂဏန်း ၆ လုံး ပြည့်အောင် ဖြည့်ပေးပါခင်ဗျာ။');
@@ -295,7 +305,6 @@
                 return;
             }
 
-            // ၃။ ငွေလွှဲပြေစာ ပုံပါမပါ စစ်ဆေးခြင်း
             if (!fileInput.files || !fileInput.files[0]) {
                 alert('⚠️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
                 return;
@@ -305,7 +314,6 @@
             btn.innerText = "ပြေစာပုံအား စစ်ဆေးနေပါသည်...";
             btn.disabled = true;
 
-            // ၄။ OCR စနစ်ဖြင့် ပြေစာ ပုံထဲမှ Tran ID ကို ဖတ်ယူတိုက်စစ်ခြင်း
             try {
                 const imageFile = fileInput.files[0];
                 const worker = await Tesseract.createWorker('eng');
@@ -314,16 +322,14 @@
 
                 const extractedText = ret.data.text;
 
-                // ဝယ်သူရိုက်ထည့်ထားသော Tran ID ကို ပုံထဲမှ ဖတ်ရသော စာသားများနှင့် တိုက်စစ်ခြင်း
                 if (!extractedText.includes(digitsOnly)) {
                     alert('❌ ရိုက်ထည့်ထားသော Tran ID (' + digitsOnly + ') သည် ငွေလွှဲပြေစာ ပုံပါ နံပါတ်နှင့် မတူညီပါ။ ကျေးဇူးပြု၍ ပြန်လည်စစ်ဆေးပါ။');
                     btn.innerText = "အော်ဒါ တင်မည်";
                     btn.disabled = false;
-                    return; // ပုံထဲမှာ Tran ID မပါပါက အော်ဒါဆက်မသွားဘဲ ရပ်တန့်မည်
+                    return;
                 }
             } catch (err) {
                 console.log("OCR Error:", err);
-                // OCR ဖတ်ရာတွင် အမှားအယွင်းရှိပါက အော်ဒါ ပုံမှန်အတိုင်း ပို့ဆောင်ပေးမည်
             }
 
             btn.innerText = "ခဏစောင့်ပါ...";
@@ -340,9 +346,11 @@
                                    "👛 Wallet Address:\n`" + address + "`\n\n" +
                                    "🧾 Tran ID (နောက်ဆုံး၆လုံး): `" + tranId + "`";
 
+            // Admin ထံသို့ ရောက်မည့် Inline Keyboards (Send TON + Cancel Order)
             const replyMarkup = JSON.stringify({
                 inline_keyboard: [
-                    [{ text: "📲 Send TON via Tonkeeper", url: tonkeeperUrl }]
+                    [{ text: "📲 Send TON via Tonkeeper", url: tonkeeperUrl }],
+                    [{ text: "❌ Cancel Order", callback_data: "admin_cancel" }]
                 ]
             });
 
