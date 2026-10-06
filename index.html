@@ -143,9 +143,10 @@
             border-radius: 12px;
             font-size: 11px;
             font-weight: bold;
+            cursor: pointer;
         }
-        .status-waiting { background-color: #f59e0b; color: #000000; cursor: pointer; }
-        .status-success { background-color: #10b981; color: #ffffff; cursor: pointer; }
+        .status-waiting { background-color: #f59e0b; color: #000000; }
+        .status-success { background-color: #10b981; color: #ffffff; }
 
         .history-detail { color: #94a3b8; margin-bottom: 4px; word-break: break-all; }
         .empty-history { text-align: center; color: #64748b; padding: 20px 0; font-size: 13px; }
@@ -242,7 +243,8 @@
         const WAVEPAY_NUMBER = "09751288906";
         const FIREBASE_DB_URL = "https://ton-buy-bot-default-rtdb.firebaseio.com"; 
         
-        let currentTonPriceMMK = 15500; // လိုအပ်ပါက ဈေးနှုန်းကို ဤနေရာတွင် ပြင်ဆင်နိုင်ပါသည်
+        // 💎 ဤနေရာတွင် TON ဈေးနှုန်းကို မိမိလိုသလို အလွယ်တကူ တိုက်ရိုက် ပြင်ဆင်နိုင်ပါသည်
+        let currentTonPriceMMK = 15500; 
         // =======================================================
 
         firebase.initializeApp({ databaseURL: FIREBASE_DB_URL });
@@ -255,7 +257,7 @@
         document.querySelectorAll('.display-kpay').forEach(el => el.innerText = KPAY_NUMBER);
         document.querySelectorAll('.display-wave').forEach(el => el.innerText = WAVEPAY_NUMBER);
 
-        // TON ဈေးနှုန်းပြသရန်
+        // ဈေးနှုန်းပြသခြင်းနှင့် တွက်ချက်ခြင်း
         document.getElementById('ton-price-display').innerText = `💎 1 TON = ${currentTonPriceMMK.toLocaleString()} MMK`;
 
         function calculateTotal() {
@@ -365,7 +367,7 @@
             }
 
             if (!fileInput.files || !fileInput.files[0]) {
-                alert('⚠️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
+                alert('⚠️️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
                 return;
             }
 
@@ -399,6 +401,7 @@
             const nanoTon = Math.floor(parseFloat(amount) * 1000000000);
             const tonPayUrl = `https://app.tonkeeper.com/transfer/${walletAddress}?amount=${nanoTon}`;
 
+            // အော်ဒါအသစ်တင်တိုင်း Waiting ဖြင့် သိမ်းဆည်းမည်
             await db.ref(`orders/${userId}/${orderId}`).set({
                 orderId: orderId,
                 userId: userId,
@@ -437,7 +440,7 @@
                 });
 
                 if(res.ok) {
-                    alert("TON အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ အော်ဒါအသစ်များကို 'Waiting' ဖြင့် စတင်တွေ့ရပါမည်။");
+                    alert("TON အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။");
                     switchTab('history-tab');
                     btn.innerText = "TON အော်ဒါ တင်မည်";
                     btn.disabled = false;
@@ -449,8 +452,8 @@
                 }
             } catch (err) {
                 alert("ကွန်ရက် ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါသည်။");
-                    btn.innerText = "TON အော်ဒါ တင်မည်";
-                    btn.disabled = false;
+                btn.innerText = "TON အော်ဒါ တင်မည်";
+                btn.disabled = false;
             }
         }
     </script>
