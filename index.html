@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buy TON Crystal</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- OCR Library (ဓာတ်ပုံထဲမှ စာသား/ဂဏန်းများ ဖတ်ရှုသည့် စနစ်) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -285,7 +287,7 @@
                 return;
             }
 
-            // ၂။ Transaction ID နောက်ဆုံး ၆ လုံး ကိန်းဂဏန်း အတိအကျ ပါ မပါ စစ်ဆေးခြင်း
+            // ၂။ Transaction ID ဂဏန်း ၆ လုံး စစ်ဆေးခြင်း
             const digitsOnly = tranId.replace(/\D/g, '');
             if (digitsOnly.length < 6) {
                 alert('⚠️ Transaction ID (နောက်ဆုံး ၆ လုံး) ကို မှန်ကန်စွာ ဂဏန်း ၆ လုံး ပြည့်အောင် ဖြည့်ပေးပါခင်ဗျာ။');
@@ -293,15 +295,38 @@
                 return;
             }
 
-            // ၃။ ငွေလွှဲပြေစာ ပုံပါမပါ စစ်ဆေးခြင်း (ပြေစာပုံ မပါရင် ရှေ့ဆက်မရပါ)
+            // ၃။ ငွေလွှဲပြေစာ ပုံပါမပါ စစ်ဆေးခြင်း
             if (!fileInput.files || !fileInput.files[0]) {
                 alert('⚠️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
                 return;
             }
 
             const btn = document.getElementById('submit-btn');
-            btn.innerText = "ခဏစောင့်ပါ...";
+            btn.innerText = "ပြေစာပုံအား စစ်ဆေးနေပါသည်...";
             btn.disabled = true;
+
+            // ၄။ OCR စနစ်ဖြင့် ပြေစာ ပုံထဲမှ Tran ID ကို ဖတ်ယူတိုက်စစ်ခြင်း
+            try {
+                const imageFile = fileInput.files[0];
+                const worker = await Tesseract.createWorker('eng');
+                const ret = await worker.recognize(imageFile);
+                await worker.terminate();
+
+                const extractedText = ret.data.text;
+
+                // ဝယ်သူရိုက်ထည့်ထားသော Tran ID ကို ပုံထဲမှ ဖတ်ရသော စာသားများနှင့် တိုက်စစ်ခြင်း
+                if (!extractedText.includes(digitsOnly)) {
+                    alert('❌ ရိုက်ထည့်ထားသော Tran ID (' + digitsOnly + ') သည် ငွေလွှဲပြေစာ ပုံပါ နံပါတ်နှင့် မတူညီပါ။ ကျေးဇူးပြု၍ ပြန်လည်စစ်ဆေးပါ။');
+                    btn.innerText = "အော်ဒါ တင်မည်";
+                    btn.disabled = false;
+                    return; // ပုံထဲမှာ Tran ID မပါပါက အော်ဒါဆက်မသွားဘဲ ရပ်တန့်မည်
+                }
+            } catch (err) {
+                console.log("OCR Error:", err);
+                // OCR ဖတ်ရာတွင် အမှားအယွင်းရှိပါက အော်ဒါ ပုံမှန်အတိုင်း ပို့ဆောင်ပေးမည်
+            }
+
+            btn.innerText = "ခဏစောင့်ပါ...";
 
             const username = (user && user.username) ? "@" + user.username : "Username မရှိပါ";
             const firstName = (user && user.first_name) ? user.first_name : "Customer";
