@@ -336,6 +336,7 @@
 
             const username = (user && user.username) ? "@" + user.username : "Username မရှိပါ";
             const firstName = (user && user.first_name) ? user.first_name : "Customer";
+            const userId = (user && user.id) ? user.id : "";
             
             const nanoAmount = Math.round(parseFloat(amount) * 1000000000);
             const tonkeeperUrl = "https://app.tonkeeper.com/transfer/" + address + "?amount=" + nanoAmount;
@@ -346,11 +347,11 @@
                                    "👛 Wallet Address:\n`" + address + "`\n\n" +
                                    "🧾 Tran ID (နောက်ဆုံး၆လုံး): `" + tranId + "`";
 
-            // Admin ထံသို့ ရောက်မည့် Inline Keyboards (Send TON + Cancel Order)
+            // Cancel Button တွင် User ID ပါဝင်အောင် တည်ဆောက်ထားခြင်း
             const replyMarkup = JSON.stringify({
                 inline_keyboard: [
                     [{ text: "📲 Send TON via Tonkeeper", url: tonkeeperUrl }],
-                    [{ text: "❌ Cancel Order", callback_data: "admin_cancel" }]
+                    [{ text: "❌ Cancel Order", callback_data: "cancel_" + userId + "_" + tranId }]
                 ]
             });
 
