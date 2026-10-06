@@ -26,6 +26,29 @@
             max-width: 360px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
+        .tabs {
+            display: flex;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #334155;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active {
+            color: #38bdf8;
+            border-bottom: 2px solid #38bdf8;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
         .title { font-size: 20px; font-weight: bold; text-align: center; color: #38bdf8; margin-bottom: 4px; }
         .subtitle { font-size: 13px; text-align: center; color: #94a3b8; margin-bottom: 16px; }
         
@@ -75,51 +98,98 @@
         }
         #preview-img {
             width: 100%;
-            max-height: 150px;
+            max-height: 120px;
             object-fit: contain;
             margin-top: 8px;
             border-radius: 6px;
             display: none;
             border: 1px solid #334155;
         }
+
+        /* Order History Styles */
+        .history-item {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+        .status-waiting {
+            background-color: #f59e0b;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        .status-success {
+            background-color: #10b981;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        .history-detail { color: #94a3b8; margin-bottom: 4px; word-break: break-all; }
+        .empty-history { text-align: center; color: #64748b; padding: 20px 0; font-size: 13px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <div class="title">💎 Buy TON Crystal</div>
-        <div class="subtitle">KBZPay / Wave Pay ဖြင့် ဝယ်ယူရန်</div>
-
-        <!-- ငွေလွှဲရမည့် အကောင့်များ -->
-        <div class="pay-info">
-            <div class="pay-title">📌 ငွေလွှဲရမည့် အကောင့်များ</div>
-            <div class="pay-row"><span>KBZPay:</span> <strong>09897775612</strong></div>
-            <div class="pay-row"><span>Wave Pay:</span> <strong>09784000463</strong></div>
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('buy-tab')">💎 TON ဝယ်ယူရန်</button>
+            <button class="tab-btn" onclick="switchTab('history-tab')">📋 အော်ဒါ မှတ်တမ်း</button>
         </div>
 
-        <!-- ဝယ်ယူသူ ဖြည့်စွက်ရမည့် Form -->
-        <div class="input-group">
-            <label>ဝယ်ယူလိုသော TON ပမာဏ:</label>
-            <input type="number" id="ton-amount" placeholder="ဥပမာ - 5" step="0.1">
+        <!-- Tab 1: Buy Form -->
+        <div id="buy-tab" class="tab-content active">
+            <div class="title">Buy TON Crystal</div>
+            <div class="subtitle">KBZPay / Wave Pay ဖြင့် ဝယ်ယူရန်</div>
+
+            <div class="pay-info">
+                <div class="pay-title">📌 ငွေလွှဲရမည့် အကောင့်များ</div>
+                <div class="pay-row"><span>KBZPay:</span> <strong>09897775612</strong></div>
+                <div class="pay-row"><span>Wave Pay:</span> <strong>09784000463</strong></div>
+            </div>
+
+            <div class="input-group">
+                <label>ဝယ်ယူလိုသော TON ပမာဏ:</label>
+                <input type="number" id="ton-amount" placeholder="ဥပမာ - 5" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label>သင်၏ TON Wallet Address (ငွေလက်ခံမည့်လိပ်စာ):</label>
+                <input type="text" id="ton-address" placeholder="UQ... သို့မဟုတ် EQ...">
+            </div>
+
+            <div class="input-group">
+                <label>KBZPay / Wave Pay Transaction ID (နောက်ဆုံး ၆ လုံး):</label>
+                <input type="text" id="tran-id" placeholder="ဥပမာ - 123456" maxlength="10">
+            </div>
+
+            <div class="input-group">
+                <label>ငွေလွှဲပြေစာ (Receipt Photo) ထည့်ရန်:</label>
+                <input type="file" id="receipt-file" accept="image/*" onchange="previewImage(event)">
+                <img id="preview-img" alt="Receipt Preview">
+            </div>
+
+            <button type="button" class="buy-btn" id="submit-btn" onclick="submitOrder()">အော်ဒါ တင်မည်</button>
         </div>
 
-        <div class="input-group">
-            <label>သင်၏ TON Wallet Address (ငွေလက်ခံမည့်လိပ်စာ):</label>
-            <input type="text" id="ton-address" placeholder="UQ... သို့မဟုတ် EQ...">
+        <!-- Tab 2: Order History -->
+        <div id="history-tab" class="tab-content">
+            <div class="title">Order History</div>
+            <div class="subtitle" style="margin-bottom: 12px;">သင့်အော်ဒါများ၏ Status အခြေအနေ</div>
+            <div id="history-list"></div>
         </div>
-
-        <div class="input-group">
-            <label>KBZPay / Wave Pay Transaction ID (နောက်ဆုံး ၆ လုံး):</label>
-            <input type="text" id="tran-id" placeholder="ဥပမာ - 123456" maxlength="10">
-        </div>
-
-        <div class="input-group">
-            <label>ငွေလွှဲပြေစာ (Receipt Photo) ထည့်ရန်:</label>
-            <input type="file" id="receipt-file" accept="image/*" onchange="previewImage(event)">
-            <img id="preview-img" alt="Receipt Preview">
-        </div>
-
-        <button type="button" class="buy-btn" id="submit-btn" onclick="submitOrder()">အော်ဒါ တင်မည်</button>
     </div>
 
     <script>
@@ -129,6 +199,19 @@
 
         const BOT_TOKEN = "8727961800:AAH0MwVr819OM8d0JtC8cbMTYPvM6yWLqhI"; 
         const ADMIN_CHAT_ID = "1551804446"; 
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if(tabId === 'buy-tab') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                loadOrderHistory();
+            }
+            document.getElementById(tabId).classList.add('active');
+        }
 
         function previewImage(event) {
             const input = event.target;
@@ -141,6 +224,50 @@
                 }
                 reader.readAsDataURL(input.files[0]);
             }
+        }
+
+        function saveOrderToLocal(order) {
+            let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
+            orders.unshift(order); // Add to beginning
+            localStorage.setItem('ton_orders', JSON.stringify(orders));
+        }
+
+        function loadOrderHistory() {
+            const historyList = document.getElementById('history-list');
+            let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
+
+            if(orders.length === 0) {
+                historyList.innerHTML = '<div class="empty-history">အော်ဒါ မှတ်တမ်း မရှိသေးပါခင်ဗျာ။</div>';
+                return;
+            }
+
+            let html = '';
+            orders.forEach((ord, index) => {
+                const statusBadge = ord.status === 'Success' 
+                    ? '<span class="status-success">✅ Success</span>' 
+                    : '<span class="status-waiting">⏳ Waiting</span>';
+
+                html += `<div class="history-item">
+                    <div class="history-header">
+                        <span>💎 ${ord.amount} TON</span>
+                        ${statusBadge}
+                    </div>
+                    <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
+                    <div class="history-detail">👛 Wallet: ${ord.address.substring(0, 8)}...${ord.address.substring(ord.address.length - 6)}</div>
+                    <div class="history-detail" style="font-size: 10px; color: #64748b; margin-top: 4px;">📅 ${ord.date}</div>
+                    ${ord.status === 'Waiting' ? `<button onclick="checkStatus(${index})" style="margin-top:6px; background:#334155; color:#38bdf8; border:none; padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">🔄 Status အခြေအနေ စစ်ဆေးမည်</button>` : ''}
+                </div>`;
+            });
+            historyList.innerHTML = html;
+        }
+
+        function checkStatus(index) {
+            let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
+            // စစ်ဆေးပြီးပါက Success အဖြစ် ပြောင်းပေးရန် Demo Toggle
+            orders[index].status = 'Success';
+            localStorage.setItem('ton_orders', JSON.stringify(orders));
+            loadOrderHistory();
+            alert('အော်ဒါ အခြေအနေကို စစ်ဆေးပြီးပါပြီ။');
         }
 
         async function submitOrder() {
@@ -162,7 +289,6 @@
             const username = (user && user.username) ? "@" + user.username : "Username မရှိပါ";
             const firstName = (user && user.first_name) ? user.first_name : "Customer";
             
-            // TON Nano Amount Calculation (1 TON = 1,000,000,000 nanoTON)
             const nanoAmount = Math.round(parseFloat(amount) * 1000000000);
             const tonkeeperUrl = "https://app.tonkeeper.com/transfer/" + address + "?amount=" + nanoAmount;
 
@@ -178,7 +304,22 @@
                 ]
             });
 
-            // ပြေစာပုံ ပါလာပါက Photo အဖြစ် ပို့မည်၊ မပါပါက Text Message ပို့မည်
+            const newOrder = {
+                amount: amount,
+                address: address,
+                tranId: tranId,
+                status: 'Waiting',
+                date: new Date().toLocaleString()
+            };
+
+            const handleSuccess = () => {
+                saveOrderToLocal(newOrder);
+                alert("အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ အော်ဒါ မှတ်တမ်းတွင် Status စစ်ဆေးနိုင်ပါသည်။");
+                switchTab('history-tab');
+                btn.innerText = "အော်ဒါ တင်မည်";
+                btn.disabled = false;
+            };
+
             if (fileInput.files && fileInput.files[0]) {
                 const formData = new FormData();
                 formData.append("chat_id", ADMIN_CHAT_ID);
@@ -193,8 +334,7 @@
                         body: formData
                     });
                     if(res.ok) {
-                        alert("အော်ဒါ အချက်အလက်နှင့် ငွေလွှဲပြေစာ ရောက်ရှိသွားပါပြီ။ ငွေဝင်ရောက်မှုကို စစ်ဆေးပြီးပါက TON လွှဲပေးပါမည်။");
-                        try { tg.close(); } catch(e){}
+                        handleSuccess();
                     } else {
                         alert("အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်။");
                         btn.innerText = "အော်ဒါ တင်မည်";
@@ -206,7 +346,6 @@
                     btn.disabled = false;
                 }
             } else {
-                // ပုံမပါဘဲ စာပဲ ပို့မည့်စနစ်
                 const xhr = new XMLHttpRequest();
                 xhr.open("POST", "https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage", true);
                 xhr.setRequestHeader("Content-Type", "application/json");
@@ -214,8 +353,7 @@
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === 4) {
                         if (xhr.status === 200) {
-                            alert("အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ ငွေစစ်ဆေးပြီးပါက TON လွှဲပေးပါမည်။");
-                            try { tg.close(); } catch(e){}
+                            handleSuccess();
                         } else {
                             alert("အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်။");
                             btn.innerText = "အော်ဒါ တင်မည်";
