@@ -275,6 +275,17 @@
             historyList.innerHTML = html;
         }
 
+        // Special Characters များကြောင့် HTML Error မတက်အောင် Escape ပြုလုပ်ပေးသည့် Function
+        function escapeHtml(text) {
+            if (!text) return "";
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         async function submitOrder() {
             const amount = document.getElementById('ton-amount').value;
             const address = document.getElementById('ton-address').value.trim();
@@ -295,7 +306,7 @@
             }
 
             if (!fileInput.files || !fileInput.files[0]) {
-                alert('⚠️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
+                alert('⚠️️ ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ (Receipt Screenshot) ဓာတ်ပုံ ထည့်သွင်းပေးပါခင်ဗျာ။');
                 return;
             }
 
@@ -323,19 +334,19 @@
 
             btn.innerText = "ခဏစောင့်ပါ...";
 
-            const username = (user && user.username) ? "@" + user.username : "Username မရှိပါ";
-            const firstName = (user && user.first_name) ? user.first_name : "Customer";
+            const username = (user && user.username) ? "@" + escapeHtml(user.username) : "Username မရှိပါ";
+            const firstName = (user && user.first_name) ? escapeHtml(user.first_name) : "Customer";
             
             const nanoAmount = Math.round(parseFloat(amount) * 1000000000);
             const tonkeeperUrl = "https://app.tonkeeper.com/transfer/" + address + "?amount=" + nanoAmount;
 
-            const captionMessage = "🛒 *အော်ဒါအသစ် ရောက်ရှိပါသည်။*\n\n" +
-                                   "👤 ဝယ်ယူသူ: " + firstName + " (" + username + ")\n" +
-                                   "💎 ပမာဏ: " + amount + " TON\n" +
-                                   "👛 Wallet Address:\n`" + address + "`\n\n" +
-                                   "🧾 Tran ID (နောက်ဆုံး၆လုံး): `" + tranId + "`";
+            // HTML Mode သို့ ပြောင်းလဲထားသော မက်ဆေ့ချ်
+            const captionMessage = `🛒 <b>အော်ဒါအသစ် ရောက်ရှိပါသည်။</b>\n\n` +
+                                   `👤 ဝယ်ယူသူ: ${firstName} (${username})\n` +
+                                   `💎 ပမာဏ: ${amount} TON\n` +
+                                   `👛 Wallet Address:\n<code>${escapeHtml(address)}</code>\n\n` +
+                                   `🧾 Tran ID (နောက်ဆုံး၆လုံး): <code>${escapeHtml(tranId)}</code>`;
 
-            // Send TON via Tonkeeper ခလုတ် တစ်ခုတည်းသာ ထည့်သွင်းထားခြင်း
             const replyMarkup = JSON.stringify({
                 inline_keyboard: [
                     [{ text: "📲 Send TON via Tonkeeper", url: tonkeeperUrl }]
@@ -362,7 +373,7 @@
             formData.append("chat_id", ADMIN_CHAT_ID);
             formData.append("photo", fileInput.files[0]);
             formData.append("caption", captionMessage);
-            formData.append("parse_mode", "Markdown");
+            formData.append("parse_mode", "HTML"); // Markdown အစား HTML ပြောင်းလိုက်သည့်အတွက် Underscore (_) ကြောင့် Error မတက်တော့ပါ
             formData.append("reply_markup", replyMarkup);
 
             try {
@@ -373,7 +384,8 @@
                 if(res.ok) {
                     handleSuccess();
                 } else {
-                    alert("အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်။");
+                    const errData = await res.json();
+                    alert("Error: " + (errData.description || "အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်"));
                     btn.innerText = "အော်ဒါ တင်မည်";
                     btn.disabled = false;
                 }
