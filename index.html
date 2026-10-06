@@ -10,7 +10,7 @@
         body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 15px; color: #333; }
         .container { max-width: 400px; margin: auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #0088cc; }
-        .tab { display: flex; justify-space-between; margin-bottom: 20px; }
+        .tab { display: flex; justify-content: space-between; margin-bottom: 20px; }
         .tab button { flex: 1; padding: 10px; border: none; background: #ddd; cursor: pointer; font-weight: bold; }
         .tab button.active { background: #0088cc; color: white; }
         .form-group { margin-bottom: 15px; }
@@ -56,12 +56,12 @@
             • အမည်: <b>Kaung Ko Ko Thant</b><br>
             • KBZ Pay: <b>09751288906</b><br>
             • Wave Money: <b>09751288906</b><br>
-            (ငွေလွှဲပြီးပါက ပြေစာပုံနှင့် Tran ID ဂဏန်း ၆ လုံး တင်ပေးပါ။)
+            (ငွေလွှဲပြီးပါက ပြေစာပုံနှင့် Tran ID ဂဏန်း ၆ လုံး အမှန်တကယ် တိုက်ဆိုင်စွာ ဖြည့်ပေးပါ။)
         </div>
 
         <div class="form-group">
             <label>ငွေလွှဲ Tran ID (သို့) ဖုန်းနံပါတ်နောက်ဆုံး ၆ လုံး</label>
-            <input type="text" id="tranId" placeholder="ဂဏန်း အတိအကျ ၆ လုံး ဖြည့်ပါ" maxlength="10">
+            <input type="text" id="tranId" placeholder="ပြေစာပါ ဂဏန်း ၆ လုံးအတိုင်း ဖြည့်ပါ" maxlength="6">
         </div>
         
         <div class="form-group">
@@ -149,15 +149,15 @@
         let wallet = document.getElementById('manualWallet').value.trim();
         let imageFile = document.getElementById('receiptImage').files[0];
 
-        // Validation Checks
+        // 1. Check all fields are filled
         if (!tranId || !wallet || !imageFile) {
             alert('ကျေးဇူးပြု၍ အချက်အလက်များနှင့် ငွေလွှဲပြေစာ ပုံကို အပြည့်အစုံ ဖြည့်စွက်ပါ။');
             return;
         }
 
-        // Check if Tran ID / Phone digits are at least 6 characters long
-        if (tranId.length < 6) {
-            alert('ကျေးဇူးပြု၍ ငွေလွှဲ Tran ID (သို့) ဖုန်းနံပါတ်နောက်ဆုံး ၆ လုံးကို အပြည့်အစုံ ထည့်သွင်းပေးပါ။');
+        // 2. Strict check for exactly 6 digits matching receipt requirement
+        if (tranId.length !== 6 || isNaN(tranId)) {
+            alert('ငွေလွှဲပြေစာတွင်ပါရှိသော နောက်ဆုံးဂဏန်း (သို့) Tran ID ၆ လုံးအတိုင်း တိကျစွာ ဖြည့်သွင်းပေးပါ။');
             return;
         }
 
@@ -208,6 +208,7 @@
                 listEl.innerHTML += `
                     <div style="background:#f8f9fa; padding:10px; margin-bottom:8px; border-radius:6px; border-left:4px solid ${order.status==='approved'?'28a745':'ffc107'}">
                         <b>💎 ${order.tonAmount} TON</b> (${order.totalMmk.toLocaleString()} MMK)<br>
+                        Tran ID / 6 digits: <b>${order.tranId}</b><br>
                         Status: <b>${order.status}</b><br>
                         <small>နည်းလမ်း: KPay / Wave</small>
                     </div>
