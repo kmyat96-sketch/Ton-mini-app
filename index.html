@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buy TON Crystal</title>
+    <title>Ton ဝယ်ယူရန်_bot</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -138,7 +141,7 @@
             border-radius: 12px;
             font-size: 11px;
         }
-        .status-cancel {
+        .status-cancelled {
             background-color: #ef4444;
             color: #fff;
             padding: 2px 8px;
@@ -216,14 +219,26 @@
     </div>
 
     <script>
+        // ==================== CONFIGURATION ====================
         const BOT_TOKEN = "8727961800:AAH0MwVr819OM8d0JtC8cbMTYPvM6yWLqhI"; 
         const ADMIN_CHAT_ID = "1551804446"; 
         const KPAY_NUMBER = "09897775612";
         const WAVEPAY_NUMBER = "09784000463";
 
+        // Firebase Configuration (console.firebase.google.com မှ ရယူပါ)
+        const firebaseConfig = {
+            databaseURL: "https://YOUR_FIREBASE_PROJECT_ID-default-rtdb.firebaseio.com"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        // =======================================================
+
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
+
+        const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+        const userId = user ? user.id : "guest_user";
 
         document.getElementById('display-kpay').innerText = KPAY_NUMBER;
         document.getElementById('display-wave').innerText = WAVEPAY_NUMBER;
@@ -236,10 +251,46 @@
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
             } else {
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
-                loadOrderHistory();
             }
             document.getElementById(tabId).classList.add('active');
         }
+
+        // Firebase မှ ရယူပြီး Realtime Listening ပြုလုပ်ခြင်း
+        database.ref('orders/' + userId).on('value', (snapshot) => {
+            const data = snapshot.val();
+            const historyList = document.getElementById('history-list');
+            const countBadge = document.getElementById('order-count-container');
+
+            if (!data) {
+                countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: 0 ခု`;
+                historyList.innerHTML = '<div class="empty-history">အော်ဒါ မှတ်တမ်း မရှိသေးပါခင်ဗျာ။</div>';
+                return;
+            }
+
+            const ordersList = Object.values(data).reverse();
+            countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (${ordersList.length}) ခု`;
+
+            let html = '';
+            ordersList.forEach((ord) => {
+                let statusBadge = '<span class="status-waiting">⏳ Waiting</span>';
+                if (ord.status === 'Cancelled') {
+                    statusBadge = '<span class="status-cancelled">❌ Cancelled</span>';
+                } else if (ord.status === 'Success') {
+                    statusBadge = '<span class="status-success">✅ Success</span>';
+                }
+
+                html += `<div class="history-item">
+                    <div class="history-header">
+                        <span>💎 ${ord.amount} TON</span>
+                        ${statusBadge}
+                    </div>
+                    <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
+                    <div class="history-detail">👛 Wallet: ${ord.address.substring(0, 8)}...${ord.address.substring(ord.address.length - 6)}</div>
+                    <div class="history-detail" style="font-size: 10px; color: #64748b; margin-top: 4px;">📅 ${ord.date}</div>
+                </div>`;
+            });
+            historyList.innerHTML = html;
+        });
 
         function previewImage(event) {
             const input = event.target;
@@ -254,62 +305,11 @@
             }
         }
 
-        function saveOrderToLocal(order) {
-            let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
-            orders.unshift(order);
-            localStorage.setItem('ton_orders', JSON.stringify(orders));
-        }
-
-        function loadOrderHistory() {
-            const historyList = document.getElementById('history-list');
-            const countBadge = document.getElementById('order-count-container');
-            let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
-
-            countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (${orders.length}) ခု`;
-
-            if(orders.length === 0) {
-                historyList.innerHTML = '<div class="empty-history">အော်ဒါ မှတ်တမ်း မရှိသေးပါခင်ဗျာ။</div>';
-                return;
-            }
-
-            let html = '';
-            orders.forEach((ord, index) => {
-                let statusBadge = '<span class="status-waiting">⏳ Waiting</span>';
-                if(ord.status === 'Success') statusBadge = '<span class="status-success">✅ Success</span>';
-                if(ord.status === 'Cancelled') statusBadge = '<span class="status-cancel">❌ Cancelled</span>';
-
-                html += `<div class="history-item">
-                    <div class="history-header">
-                        <span>💎 ${ord.amount} TON</span>
-                        ${statusBadge}
-                    </div>
-                    <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
-                    <div class="history-detail">👛 Wallet: ${ord.address.substring(0, 8)}...${ord.address.substring(ord.address.length - 6)}</div>
-                    <div class="history-detail" style="font-size: 10px; color: #64748b; margin-top: 4px;">📅 ${ord.date}</div>
-                    ${ord.status === 'Waiting' ? `<button onclick="toggleStatus(${index})" style="margin-top:6px; background:#334155; color:#38bdf8; border:none; padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">🔄 Status အခြေအနေ ပြောင်းရန်</button>` : ''}
-                </div>`;
-            });
-            historyList.innerHTML = html;
-        }
-
-        function toggleStatus(index) {
-            let orders = JSON.parse(localStorage.getItem('ton_orders') || '[]');
-            const current = orders[index].status;
-            
-            // Waiting မှ Success/Cancelled သို့ အလှည့်ကျ ပြောင်းလဲနိုင်အောင် ပြုလုပ်ထားခြင်း
-            if(current === 'Waiting') orders[index].status = 'Cancelled';
-            else orders[index].status = 'Success';
-
-            localStorage.setItem('ton_orders', JSON.stringify(orders));
-            loadOrderHistory();
-        }
-
         async function submitOrder() {
             const amount = document.getElementById('ton-amount').value;
             const address = document.getElementById('ton-address').value.trim();
             const tranId = document.getElementById('tran-id').value.trim();
             const fileInput = document.getElementById('receipt-file');
-            const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
 
             if(!amount || !address || !tranId) {
                 alert('ကျေးဇူးပြု၍ ပမာဏ၊ Address နှင့် Transaction ID တို့ကို ဖြည့်စွက်ပေးပါခင်ဗျာ။');
@@ -352,9 +352,21 @@
 
             btn.innerText = "ခဏစောင့်ပါ...";
 
+            const orderId = "ORD_" + Date.now();
+            const orderData = {
+                orderId: orderId,
+                amount: amount,
+                address: address,
+                tranId: tranId,
+                status: 'Waiting',
+                date: new Date().toLocaleString()
+            };
+
+            // Firebase Database ထဲသို့ သိမ်းဆည်းခြင်း
+            await database.ref('orders/' + userId + '/' + orderId).set(orderData);
+
             const username = (user && user.username) ? "@" + user.username : "Username မရှိပါ";
             const firstName = (user && user.first_name) ? user.first_name : "Customer";
-            const userId = (user && user.id) ? user.id : "";
             
             const nanoAmount = Math.round(parseFloat(amount) * 1000000000);
             const tonkeeperUrl = "https://app.tonkeeper.com/transfer/" + address + "?amount=" + nanoAmount;
@@ -365,28 +377,13 @@
                                    "👛 Wallet Address:\n`" + address + "`\n\n" +
                                    "🧾 Tran ID (နောက်ဆုံး၆လုံး): `" + tranId + "`";
 
+            // Callback Data တွင် userId နှင့် orderId ထည့်သွင်းထားခြင်း
             const replyMarkup = JSON.stringify({
                 inline_keyboard: [
                     [{ text: "📲 Send TON via Tonkeeper", url: tonkeeperUrl }],
-                    [{ text: "❌ Cancel Order", callback_data: "cancel_" + userId + "_" + tranId }]
+                    [{ text: "❌ Cancel Order", callback_data: "cancel_" + userId + "_" + orderId }]
                 ]
             });
-
-            const newOrder = {
-                amount: amount,
-                address: address,
-                tranId: tranId,
-                status: 'Waiting',
-                date: new Date().toLocaleString()
-            };
-
-            const handleSuccess = () => {
-                saveOrderToLocal(newOrder);
-                alert("အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ အော်ဒါ မှတ်တမ်းတွင် Status စစ်ဆေးနိုင်ပါသည်။");
-                switchTab('history-tab');
-                btn.innerText = "အော်ဒါ တင်မည်";
-                btn.disabled = false;
-            };
 
             const formData = new FormData();
             formData.append("chat_id", ADMIN_CHAT_ID);
@@ -401,9 +398,8 @@
                     body: formData
                 });
                 if(res.ok) {
-                    handleSuccess();
-                } else {
-                    alert("အော်ဒါ ပို့ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည်။");
+                    alert("အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ အော်ဒါ မှတ်တမ်းတွင် Status စစ်ဆေးနိုင်ပါသည်။");
+                    switchTab('history-tab');
                     btn.innerText = "အော်ဒါ တင်မည်";
                     btn.disabled = false;
                 }
