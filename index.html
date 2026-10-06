@@ -6,6 +6,8 @@
     <title>Buy TON Coin</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -125,14 +127,15 @@
             margin-bottom: 6px;
             font-weight: bold;
         }
-        .status-success {
-            background-color: #10b981;
-            color: #ffffff;
+        .status-badge {
             padding: 2px 8px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: bold;
         }
+        .status-waiting { background-color: #f59e0b; color: #000000; }
+        .status-success { background-color: #10b981; color: #ffffff; }
+
         .history-detail { color: #94a3b8; margin-bottom: 4px; word-break: break-all; }
         .empty-history { text-align: center; color: #64748b; padding: 20px 0; font-size: 13px; }
         
@@ -152,13 +155,11 @@
 <body>
 
     <div class="card">
-        <!-- Tabs 2 ခု -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('ton-tab')">💎 Buy TON</button>
             <button class="tab-btn" onclick="switchTab('history-tab')">📋 မှတ်တမ်း</button>
         </div>
 
-        <!-- 1. TON Coin Buy Tab -->
         <div id="ton-tab" class="tab-content active">
             <div class="title">Buy TON Coin</div>
             <div class="subtitle">KBZPay / Wave Pay ဖြင့် TON ဝယ်ယူရန်</div>
@@ -194,7 +195,6 @@
             <button type="button" class="buy-btn" id="ton-submit-btn" onclick="submitTonOrder()">TON အော်ဒါ တင်မည်</button>
         </div>
 
-        <!-- 2. History Tab -->
         <div id="history-tab" class="tab-content">
             <div class="title">Order History</div>
             <div class="subtitle" style="margin-bottom: 8px;">သင့်အော်ဒါများ၏ Status အခြေအနေ</div>
@@ -213,7 +213,11 @@
         const ADMIN_CHAT_ID = "2009418896"; 
         const KPAY_NUMBER = "09751288906";
         const WAVEPAY_NUMBER = "09751288906";
+        const FIREBASE_DB_URL = "https://ton-buy-bot-default-rtdb.firebaseio.com"; 
         // =======================================================
+
+        firebase.initializeApp({ databaseURL: FIREBASE_DB_URL });
+        const db = firebase.database();
 
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -248,37 +252,41 @@
             }
         }
 
-        function saveOrderToLocal(order) {
-            let orders = JSON.parse(localStorage.getItem('all_orders') || '[]');
-            orders.unshift(order);
-            localStorage.setItem('all_orders', JSON.stringify(orders));
-        }
-
         function loadOrderHistory() {
             const historyList = document.getElementById('history-list');
             const countBadge = document.getElementById('order-count-container');
-            let orders = JSON.parse(localStorage.getItem('all_orders') || '[]');
+            const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+            const userId = user ? user.id : 'guest_user';
 
-            countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (${orders.length}) ခု`;
+            db.ref('orders/' + userId).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if(!data) {
+                    countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (0) ခု`;
+                    historyList.innerHTML = '<div class="empty-history">အော်ဒါ မှတ်တမ်း မရှိသေးပါခင်ဗျာ။</div>';
+                    return;
+                }
 
-            if(orders.length === 0) {
-                historyList.innerHTML = '<div class="empty-history">အော်ဒါ မှတ်တမ်း မရှိသေးပါခင်ဗျာ။</div>';
-                return;
-            }
+                const orders = Object.values(data).reverse();
+                countBadge.innerText = `📊 စုစုပေါင်း အော်ဒါ: (${orders.length}) ခု`;
 
-            let html = '';
-            orders.forEach((ord) => {
-                html += `<div class="history-item">
-                    <div class="history-header">
-                        <span>💎 ${ord.amount} ${ord.type}</span>
-                        <span class="status-success">✅ Success</span>
-                    </div>
-                    <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
-                    <div class="history-detail">🎯 Target: ${ord.target}</div>
-                    <div class="history-detail" style="font-size: 10px; color: #64748b; margin-top: 4px;">📅 ${ord.date}</div>
-                </div>`;
+                let html = '';
+                orders.forEach((ord) => {
+                    const isSuccess = ord.status === 'Success';
+                    const badgeClass = isSuccess ? 'status-success' : 'status-waiting';
+                    const statusText = isSuccess ? '✅ Success' : '⏳ Waiting';
+
+                    html += `<div class="history-item">
+                        <div class="history-header">
+                            <span>💎 ${ord.amount} ${ord.type}</span>
+                            <span class="status-badge ${badgeClass}">${statusText}</span>
+                        </div>
+                        <div class="history-detail">🧾 Tran ID: ${ord.tranId}</div>
+                        <div class="history-detail">🎯 Target: ${ord.target}</div>
+                        <div class="history-detail" style="font-size: 10px; color: #64748b; margin-top: 4px;">📅 ${ord.date}</div>
+                    </div>`;
+                });
+                historyList.innerHTML = html;
             });
-            historyList.innerHTML = html;
         }
 
         function escapeHtml(text) {
@@ -291,7 +299,6 @@
                 .replace(/'/g, "&#039;");
         }
 
-        // Submit TON Order
         async function submitTonOrder() {
             const amount = document.getElementById('ton-amount').value;
             const walletAddress = document.getElementById('ton-wallet-address').value.trim();
@@ -337,11 +344,25 @@
             btn.innerText = "ခဏစောင့်ပါ...";
 
             const user = tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+            const userId = user ? user.id : 'guest_user';
             const username = (user && user.username) ? "@" + escapeHtml(user.username) : "Username မရှိပါ";
             const firstName = (user && user.first_name) ? escapeHtml(user.first_name) : "Customer";
 
+            const orderId = "ORD_" + Date.now();
             const nanoTon = Math.floor(parseFloat(amount) * 1000000000);
             const tonPayUrl = `https://app.tonkeeper.com/transfer/${walletAddress}?amount=${nanoTon}`;
+
+            // Firebase ထဲတွင် Waiting ဖြင့် သိမ်းဆည်းခြင်း
+            await db.ref(`orders/${userId}/${orderId}`).set({
+                orderId: orderId,
+                userId: userId,
+                type: 'TON',
+                amount: amount,
+                target: walletAddress,
+                tranId: tranId,
+                status: 'Waiting',
+                date: new Date().toLocaleString()
+            });
 
             const caption = `💎 <b>TON Coin အော်ဒါအသစ် ရောက်ရှိပါသည်။</b>\n\n` +
                             `👤 ဝယ်ယူသူ: ${firstName} (${username})\n` +
@@ -350,7 +371,10 @@
                             `🧾 Tran ID (နောက်ဆုံး၆လုံး): <code>${escapeHtml(tranId)}</code>`;
 
             const replyMarkup = JSON.stringify({
-                inline_keyboard: [[{ text: "🚀 Send TON via Tonkeeper", url: tonPayUrl }]]
+                inline_keyboard: [
+                    [{ text: "🚀 Send TON via Tonkeeper", url: tonPayUrl }],
+                    [{ text: "✅ Success အဖြစ် အတည်ပြုမည်", callback_data: `approve:${userId}:${orderId}` }]
+                ]
             });
 
             const formData = new FormData();
@@ -367,15 +391,7 @@
                 });
 
                 if(res.ok) {
-                    saveOrderToLocal({
-                        type: 'TON',
-                        amount: amount,
-                        target: walletAddress,
-                        tranId: tranId,
-                        status: 'Success',
-                        date: new Date().toLocaleString()
-                    });
-                    alert("TON အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ Admin မှ စစ်ဆေးပြီး TON Transfer လုပ်ပေးပါလိမ့်မည်။");
+                    alert("TON အော်ဒါ အချက်အလက်များ အောင်မြင်စွာ ရောက်ရှိသွားပါပြီ။ Admin မှ TON လွှဲပြီးပါက Success ဖြစ်သွားပါလိမ့်မည်။");
                     switchTab('history-tab');
                     btn.innerText = "TON အော်ဒါ တင်မည်";
                     btn.disabled = false;
